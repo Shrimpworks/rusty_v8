@@ -98,6 +98,11 @@ def main():
         fail("unexpected builder image platform digest")
     if builder["cargo"]["toolchain"] != "1.91.0" or builder["cargo"]["target"] != required["target"]:
         fail("unexpected Rust toolchain or target")
+    if builder["cargo"]["hostToolchainPath"] != "/usr/local/rustup/toolchains/1.91.0-x86_64-unknown-linux-gnu":
+        fail("unexpected builder-image Rust toolchain path")
+    for key in ("rustcCommit", "cargoCommit"):
+        if not re.fullmatch(r"[0-9a-f]{40}", builder["cargo"][key]):
+            fail(f"invalid {key}")
     if builder["claims"] != {"unsigned": True, "admitted": False, "published": False, "independentBuilder": False}:
         fail("arm64 claims must remain unsigned, unpublished, unadmitted, and non-independent")
 

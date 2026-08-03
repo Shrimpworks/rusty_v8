@@ -39,8 +39,10 @@ is same-host cross-build evidence and is never independent-builder evidence.
 The sibling locks all additions needed beyond the unchanged amd64 contract:
 
 - the existing official Rust 1.91.0 Bookworm Linux/amd64 builder by platform
-  digest, plus the versioned Rust arm64 standard-library archive and the exact
-  channel manifest that binds it;
+  digest and exact internal rustc/Cargo paths and commit identities, plus the
+  versioned Rust arm64 standard-library archive and the exact channel manifest
+  that binds it; prefetch invokes the sealed toolchain binaries directly and
+  never lets a rustup proxy expand the upstream multi-target toolchain file;
 - the unchanged Chromium Clang, LLVM 19 bindgen runtime, V8 Rust host toolchain,
   GN, Ninja, and amd64 host sysroot;
 - the Chromium arm64 target sysroot by URL, size, and SHA-256;

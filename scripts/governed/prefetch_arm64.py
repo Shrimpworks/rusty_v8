@@ -112,7 +112,17 @@ def install_rust_target(downloads):
     archive = CACHE / "downloads" / "rust-std-aarch64-unknown-linux-gnu.tar.xz"
     download(target["url"], target["sha256"], archive, target["size"])
     toolchain = CACHE / "rust-toolchain"
-    source_toolchain = pathlib.Path(subprocess.check_output(["rustc", "--print", "sysroot"], text=True).strip())
+    source_toolchain = pathlib.Path(LOCK["cargo"]["hostToolchainPath"])
+    rustc_version = subprocess.check_output(
+        [str(source_toolchain / "bin/rustc"), "--version", "--verbose"], text=True
+    )
+    cargo_version = subprocess.check_output(
+        [str(source_toolchain / "bin/cargo"), "--version", "--verbose"], text=True
+    )
+    if LOCK["cargo"]["rustcCommit"] not in rustc_version or LOCK["cargo"]["rustcLlvmVersion"] not in rustc_version:
+        raise SystemExit("builder image Rust compiler differs from the arm64 lock")
+    if LOCK["cargo"]["cargoCommit"] not in cargo_version:
+        raise SystemExit("builder image Cargo differs from the arm64 lock")
     shutil.rmtree(toolchain, ignore_errors=True)
     shutil.copytree(source_toolchain, toolchain, symlinks=True)
     with tempfile.TemporaryDirectory() as temporary:
@@ -194,8 +204,12 @@ def main():
 
     cargo_home = CACHE / "cargo-home"
     cargo_home.mkdir(exist_ok=True)
-    env = os.environ | {"CARGO_HOME": str(cargo_home)}
-    subprocess.run(["cargo", "fetch", "--locked"], cwd=ROOT, env=env, check=True)
+    host_toolchain = pathlib.Path(LOCK["cargo"]["hostToolchainPath"])
+    env = os.environ | {
+        "CARGO_HOME": str(cargo_home),
+        "RUSTC": str(host_toolchain / "bin/rustc"),
+    }
+    subprocess.run([str(host_toolchain / "bin/cargo"), "fetch", "--locked"], cwd=ROOT, env=env, check=True)
     cargo_archives = {
         str(path.relative_to(cargo_home)): digest(path)
         for path in sorted(cargo_home.rglob("*.crate"))

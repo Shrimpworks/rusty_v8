@@ -16,8 +16,7 @@ The first build profile is deliberately narrow:
 - release mode, `simdutf` enabled, pointer compression disabled;
 - fixed workspace path `/workspace` and `SOURCE_DATE_EPOCH=1784209467`;
 - exact official Rust 1.91.0 Bookworm builder image by platform digest;
-- exact Debian Bookworm libclang, LLVM, and Z3 runtime packages by URL, version,
-  size, and SHA-256 for offline bindgen, with their source package URLs retained;
+- matching libclang from the digest-pinned V8 Rust toolchain archive for bindgen;
 - networked input acquisition followed by a Docker `--network none` build;
 - Cargo `--frozen`, offline mode, a fixed eight-job build, UTC and `C.UTF-8`.
 

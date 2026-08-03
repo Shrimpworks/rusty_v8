@@ -23,35 +23,6 @@
     "sha256": "de584381536aa5ba2403033c4f8b70f3c39c2e5d7fa87c953b7fd8bfbba0ee2a",
     "size": 69635068
   },
-  "bindgenLibclang": {
-    "directory": ".governed-cache/libclang-runtime/usr/lib/x86_64-linux-gnu",
-    "packages": [
-      {
-        "name": "libclang1-14",
-        "version": "1:14.0.6-12",
-        "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-14/libclang1-14_14.0.6-12_amd64.deb",
-        "sha256": "d0fb8eb1aa43a27ed9c3cca2a65108ab433735cb4cf1322444dbf269008e93a9",
-        "size": 6156824,
-        "source": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-14/llvm-toolchain-14_14.0.6-12.dsc"
-      },
-      {
-        "name": "libllvm14",
-        "version": "1:14.0.6-12",
-        "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-14/libllvm14_14.0.6-12_amd64.deb",
-        "sha256": "cd986403cfe53f47c41b80667f6b344c40fe35de4c5081dad9358b4c77cf64a8",
-        "size": 21840232,
-        "source": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-14/llvm-toolchain-14_14.0.6-12.dsc"
-      },
-      {
-        "name": "libz3-4",
-        "version": "4.8.12-3.1",
-        "url": "https://deb.debian.org/debian/pool/main/z/z3/libz3-4_4.8.12-3.1_amd64.deb",
-        "sha256": "6221ca25ad5abcfbe1965801029d85a88b4775320384b4b716de8fab7a4d2f7a",
-        "size": 7216172,
-        "source": "https://deb.debian.org/debian/pool/main/z/z3/z3_4.8.12-3.1.dsc"
-      }
-    ]
-  },
   "gn": {
     "package": "gn/gn/linux-amd64",
     "version": "git_revision:3357c4f51b1a9e676378c695dd9c7e9911c35ee6",

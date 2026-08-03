@@ -161,6 +161,9 @@ def install_cross_toolchain(downloads):
         cross / "usr/bin/aarch64-linux-gnu-readelf",
         cross / "usr/bin/qemu-aarch64-static",
         cross / "usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1",
+        cross / "usr/aarch64-linux-gnu/include/features.h",
+        cross / "usr/aarch64-linux-gnu/include/features-time64.h",
+        cross / "usr/aarch64-linux-gnu/include/bits/wordsize.h",
     ]
     for path in required:
         if not path.exists():

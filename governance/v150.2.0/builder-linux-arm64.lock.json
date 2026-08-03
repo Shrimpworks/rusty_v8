@@ -149,7 +149,7 @@
     "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER": "/workspace/.governed-cache-arm64/cross/usr/bin/aarch64-linux-gnu-gcc-12",
     "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER": "/workspace/.governed-cache-arm64/cross/usr/bin/qemu-aarch64-static -L /workspace/.governed-cache-arm64/cross/usr/aarch64-linux-gnu",
     "LD_LIBRARY_PATH": "/workspace/.governed-cache-arm64/llvm19/usr/lib/x86_64-linux-gnu",
-    "BINDGEN_EXTRA_CLANG_ARGS": "-resource-dir=/workspace/.governed-cache-arm64/llvm19/usr/lib/llvm-19/lib/clang/19"
+    "BINDGEN_EXTRA_CLANG_ARGS": "--target=aarch64-linux-gnu -isystem/workspace/.governed-cache-arm64/cross/usr/aarch64-linux-gnu/include -resource-dir=/workspace/.governed-cache-arm64/llvm19/usr/lib/llvm-19/lib/clang/19"
   },
   "claims": {
     "unsigned": true,

@@ -14,6 +14,7 @@ llvm19_lib="$cache/llvm19/usr/lib/x86_64-linux-gnu"
 linker="$cross/usr/bin/aarch64-linux-gnu-gcc-12"
 runner="$cross/usr/bin/qemu-aarch64-static"
 target_root="$cross/usr/aarch64-linux-gnu"
+target_include="$target_root/include"
 
 test "$(pwd)" = /workspace
 test "${GOVERNED_NETWORK_MODE:-}" = none
@@ -39,6 +40,9 @@ test -x "$linker"
 test -x "$runner"
 test -x "$cross/usr/bin/aarch64-linux-gnu-readelf"
 test -e "$target_root/lib/ld-linux-aarch64.so.1"
+test -f "$target_include/features.h"
+test -f "$target_include/features-time64.h"
+test -f "$target_include/bits/wordsize.h"
 test -e "$libclang/libclang-19.so.19"
 test -e "$llvm19_lib/libLLVM.so.19.1"
 test -d "$libclang/clang/19/include"
@@ -59,7 +63,7 @@ export RUSTC="$rust_toolchain/bin/rustc"
 export CLANG_BASE_PATH="$cache/clang"
 export LIBCLANG_PATH="$libclang"
 export LD_LIBRARY_PATH="$llvm19_lib"
-export BINDGEN_EXTRA_CLANG_ARGS="-resource-dir=$libclang/clang/19"
+export BINDGEN_EXTRA_CLANG_ARGS="--target=aarch64-linux-gnu -isystem$target_include -resource-dir=$libclang/clang/19"
 export GN="$gn"
 export NINJA="$ninja"
 export V8_FROM_SOURCE=1
@@ -75,11 +79,18 @@ unset SCCACHE CCACHE RUSTC_WRAPPER
 
 python3 scripts/governed/verify_arm64_inputs.py --require-submodules
 build_log="$target/governed-build.log"
-if "$rust_toolchain/bin/cargo" build --frozen --release --target aarch64-unknown-linux-gnu --features simdutf -j8 > "$build_log" 2>&1; then
-  cat "$build_log"
-else
-  cat "$build_log" >&2
-  exit 1
+build_status="$target/governed-build.status"
+(
+  set +e
+  "$rust_toolchain/bin/cargo" build --frozen --release --target aarch64-unknown-linux-gnu --features simdutf -j8
+  status=$?
+  printf '%s\n' "$status" > "$build_status"
+  exit 0
+) 2>&1 | tee "$build_log"
+status=$(cat "$build_status")
+rm -f "$build_status"
+if [ "$status" -ne 0 ]; then
+  exit "$status"
 fi
 "$rust_toolchain/bin/cargo" test --frozen --release --target aarch64-unknown-linux-gnu --features simdutf --test test_api get_version -- --exact > "$target/fixed-verification.txt" 2>&1
 cat "$target/fixed-verification.txt"

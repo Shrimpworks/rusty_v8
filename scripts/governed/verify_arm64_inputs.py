@@ -54,6 +54,12 @@ def main():
         fail("merged governed baseline no longer matches the reviewed follow-up tree")
     if not git("merge-base", "--is-ancestor", "a31b8f39dc6933d5635367e8ccb67d70f2cc2385", "HEAD") == "":
         fail("HEAD does not descend from the exact merged governed baseline")
+    if git("rev-parse", "eddede228a9214c4dfb6a85aeca22abc0679100d^{tree}") != git(
+        "rev-parse", "c774d71b9b1d0021a5283b07d9185d6ec4d41b95^{tree}"
+    ):
+        fail("merged arm64 baseline no longer matches the reviewed PR #3 tree")
+    if not git("merge-base", "--is-ancestor", "eddede228a9214c4dfb6a85aeca22abc0679100d", "HEAD") == "":
+        fail("HEAD does not descend from the exact merged arm64 baseline")
 
     actual_links = {}
     for line in git("ls-files", "-s").splitlines():
@@ -100,6 +106,13 @@ def main():
         fail("unexpected Rust toolchain or target")
     if builder["cargo"]["hostToolchainPath"] != "/usr/local/rustup/toolchains/1.91.0-x86_64-unknown-linux-gnu":
         fail("unexpected builder-image Rust toolchain path")
+    expected_bindgen_args = (
+        "--target=aarch64-linux-gnu "
+        "-isystem/workspace/.governed-cache-arm64/cross/usr/aarch64-linux-gnu/include "
+        "-resource-dir=/workspace/.governed-cache-arm64/llvm19/usr/lib/llvm-19/lib/clang/19"
+    )
+    if builder["environment"]["BINDGEN_EXTRA_CLANG_ARGS"] != expected_bindgen_args:
+        fail("unexpected arm64 bindgen target/header closure")
     for key in ("rustcCommit", "cargoCommit"):
         if not re.fullmatch(r"[0-9a-f]{40}", builder["cargo"][key]):
             fail(f"invalid {key}")

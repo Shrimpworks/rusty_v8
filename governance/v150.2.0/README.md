@@ -164,6 +164,11 @@ unadmitted bundle under `governed-out/v150.2.0/linux-arm64/`:
 and a 2 GiB total cap. Exceeding a cap is a verification failure; caps are not
 raised during a build to make an output pass.
 
+The GitHub arm64 job exposes connected prefetch and decisive network-disabled
+build as separate workflow steps. Cargo/V8 output is streamed while also being
+retained byte-for-byte as the governed build log; this changes observability,
+not the empty-cache or network boundary.
+
 ## Verification and claims
 
 `scripts/governed/verify_release.py` recomputes every enumerated digest, checks
@@ -204,10 +209,25 @@ bundle, publication, signing, or admission resulted.
 
 Prefetch now writes the installer-compatible exact URL stamp after verifying
 and extracting each locked sysroot. This deterministic handoff correction does
-not add an input or enable build networking. In accordance with the fail-closed
-stop condition, the decisive build was not retried in this task; only contract
-and static verification cover the correction. Full arm64 success remains
-unclaimed until the gated job completes from a new clean state.
+not add an input or enable build networking.
+
+The next exact clean attempt ran on GitHub Actions from reviewed fork head
+`c774d71b9b1d0021a5283b07d9185d6ec4d41b95`, merged to the governed baseline
+as `eddede228a9214c4dfb6a85aeca22abc0679100d`. It is retained separately as
+`arm64-clean-build-blocker-bindgen.json`. Digest-pinned prefetch again completed
+with 263 Cargo archives. The network-disabled cold V8 build then completed all
+4,337 Ninja actions and created an intermediate `librusty_v8.a`, but bindgen
+selected `/usr/include/features-time64.h` from the host header set and could not
+resolve target header `bits/wordsize.h`. Cargo therefore failed closed before
+the fixed test, evidence bundle, upload, publication, signing, or admission.
+
+The required target header was independently confirmed inside the already
+locked `libc6-dev-arm64-cross` archive with its declared SHA-256. The follow-up
+bindgen correction explicitly selects `aarch64-linux-gnu` and that pinned target
+include directory, and prefetch/build now refuse a closure missing the relevant
+glibc headers. No package, digest, source gitlink, output cap, amd64 contract, or
+network policy changes. Full arm64 success remains unclaimed until the gated job
+completes from a new clean state.
 
 ## Ownership and update policy
 

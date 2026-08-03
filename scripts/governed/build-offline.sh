@@ -12,7 +12,7 @@ test "$(pwd)" = /workspace
 test -x "$gn"
 test -x "$ninja"
 test -x "$cache/clang/bin/clang"
-test -e "$libclang/libclang-19.so.19.1"
+test -e "$libclang/libclang-19.so.19"
 test -d "$libclang/clang/19/include"
 test -f "$cache/prefetch-evidence.json"
 

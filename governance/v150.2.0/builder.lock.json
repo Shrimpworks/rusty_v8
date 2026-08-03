@@ -56,7 +56,7 @@
     "V8_FROM_SOURCE": "1",
     "PRINT_GN_ARGS": "1",
     "CARGO_NET_OFFLINE": "true",
-    "BINDGEN_EXTRA_CLANG_ARGS": "--resource-dir=/workspace/.governed-cache/clang/lib/clang/23",
+    "BINDGEN_EXTRA_CLANG_ARGS": "-resource-dir=/workspace/.governed-cache/clang/lib/clang/23",
     "RUSTUP_TOOLCHAIN": "1.91.0-x86_64-unknown-linux-gnu"
   }
 }

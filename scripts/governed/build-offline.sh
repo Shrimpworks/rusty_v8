@@ -21,7 +21,7 @@ export CARGO_NET_OFFLINE=true
 export RUSTUP_TOOLCHAIN=1.91.0-x86_64-unknown-linux-gnu
 export CLANG_BASE_PATH="$cache/clang"
 export LIBCLANG_PATH="$libclang"
-export BINDGEN_EXTRA_CLANG_ARGS="--resource-dir=$cache/clang/lib/clang/23"
+export BINDGEN_EXTRA_CLANG_ARGS="-resource-dir=$cache/clang/lib/clang/23"
 export GN="$gn"
 export NINJA="$ninja"
 export V8_FROM_SOURCE=1

@@ -108,8 +108,17 @@ def main():
         gn = ROOT / ".governed-cache/gn/gn"
         (metadata / "ninja-graph.dot").write_text(run([str(ninja), "-C", str(GN_OUT), "-t", "graph", "rusty_v8"]))
         (metadata / "ninja-deps.txt").write_text(run([str(ninja), "-C", str(GN_OUT), "-t", "deps", "rusty_v8"]))
-        (metadata / "gn-desc.json").write_text(run([str(gn), "desc", str(GN_OUT), "//:rusty_v8", "--format=json"]))
-        (metadata / "effective-gn-args.txt").write_text(run([str(gn), "args", str(GN_OUT), "--list"]))
+        project = json.loads((GN_OUT / "project.json").read_text())
+        target_label = "//:rusty_v8"
+        if target_label not in project["targets"]:
+            raise SystemExit(f"missing governed GN target: {target_label}")
+        (metadata / "gn-target.json").write_text(
+            json.dumps({target_label: project["targets"][target_label]}, indent=2, sort_keys=True) + "\n"
+        )
+        (metadata / "generated-build-settings.json").write_text(
+            json.dumps(project["build_settings"], indent=2, sort_keys=True) + "\n"
+        )
+        shutil.copy2(TARGET / "governed-build.log", metadata / "governed-build.log")
         (metadata / "archive-members.txt").write_text(run(["ar", "t", str(raw_archive)]))
         (metadata / "submodules.txt").write_text(run(["git", "submodule", "status", "--recursive"]))
         versions = {
@@ -126,6 +135,7 @@ def main():
 
     cargo_lock = tomllib.loads((ROOT / "Cargo.lock").read_text())
     source_lock = json.loads((GOV / "source.lock.json").read_text())
+    governed_head = run(["git", "rev-parse", "HEAD"]).strip()
     components = []
     for package in cargo_lock["package"]:
         component = {"type": "library", "name": package["name"], "version": package["version"]}
@@ -155,7 +165,13 @@ def main():
     subjects = [path for path in sorted(OUT.iterdir()) if path.name not in {"artifact-sha256sums.txt", "provenance.intoto.json", "release-manifest.json"}]
     sums = "".join(f"{sha(path)}  {path.name}\n" for path in subjects)
     (OUT / "artifact-sha256sums.txt").write_text(sums)
-    materials = [{"uri": source_lock["upstream"]["repository"], "digest": {"gitCommit": source_lock["upstream"]["commit"]}}]
+    materials = [
+        {
+            "uri": "https://github.com/dills122/rusty_v8.git",
+            "digest": {"gitCommit": governed_head},
+        },
+        {"uri": source_lock["upstream"]["repository"], "digest": {"gitCommit": source_lock["upstream"]["commit"]}},
+    ]
     materials.extend({"uri": item["url"], "digest": {"gitCommit": item["commit"]}} for item in source_lock["gitlinks"])
     provenance = {
         "_type": "https://in-toto.io/Statement/v1",
@@ -172,7 +188,14 @@ def main():
     }
     (OUT / "provenance.intoto.json").write_text(json.dumps(provenance, indent=2, sort_keys=True) + "\n")
     manifest_files = {path.name: {"sha256": sha(path), "size": path.stat().st_size} for path in sorted(OUT.iterdir()) if path.name != "release-manifest.json"}
-    manifest = {"schemaVersion": 1, "profile": "linux-amd64-release-simdutf-v1", "unsigned": True, "admitted": False, "files": manifest_files}
+    manifest = {
+        "schemaVersion": 1,
+        "profile": "linux-amd64-release-simdutf-v1",
+        "sourceCommit": governed_head,
+        "unsigned": True,
+        "admitted": False,
+        "files": manifest_files,
+    }
     (OUT / "release-manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
 
 

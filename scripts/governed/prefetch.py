@@ -85,6 +85,17 @@ def main():
         shutil.rmtree(clang_dir, ignore_errors=True)
         safe_extract_tar(clang_archive, clang_dir)
 
+    llvm19_root = CACHE / "llvm19"
+    llvm19_packages = []
+    for package in LOCK["llvm19Bindgen"]["packages"]:
+        archive = CACHE / "downloads" / f"{package['sha256']}.deb"
+        download(package["url"], package["sha256"], archive)
+        llvm19_packages.append((package, archive))
+    shutil.rmtree(llvm19_root, ignore_errors=True)
+    llvm19_root.mkdir(parents=True)
+    for _package, archive in llvm19_packages:
+        subprocess.run(["dpkg-deb", "--extract", str(archive), str(llvm19_root)], check=True)
+
     rust_archive = CACHE / "downloads" / "v8-rust-toolchain.tar.xz"
     toolchain = LOCK["v8RustToolchain"]
     download(toolchain["url"], toolchain["sha256"], rust_archive)
@@ -117,6 +128,9 @@ def main():
             "v8RustToolchain": digest(rust_archive),
             "gn": digest(CACHE / "downloads" / f"{LOCK['gn']['archiveSha256']}.zip"),
             "ninja": digest(CACHE / "downloads" / f"{LOCK['ninja']['archiveSha256']}.zip"),
+            "llvm19Bindgen": {
+                package["name"]: digest(archive) for package, archive in llvm19_packages
+            },
         },
     }
     (CACHE / "prefetch-evidence.json").write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n")

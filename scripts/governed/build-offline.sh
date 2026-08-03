@@ -6,13 +6,16 @@ cache="$root/.governed-cache"
 target="$root/target/governed-v150.2.0"
 gn="$cache/gn/gn"
 ninja="$cache/ninja/ninja"
-libclang="$root/third_party/rust-toolchain/lib"
+libclang="$cache/llvm19/usr/lib/llvm-19/lib"
+llvm19_lib="$cache/llvm19/usr/lib/x86_64-linux-gnu"
 
 test "$(pwd)" = /workspace
 test -x "$gn"
 test -x "$ninja"
 test -x "$cache/clang/bin/clang"
-test -e "$libclang/libclang.so"
+test -e "$libclang/libclang-19.so.19"
+test -e "$llvm19_lib/libLLVM.so.19.1"
+test -d "$libclang/clang/19/include"
 test -f "$cache/prefetch-evidence.json"
 
 export CARGO_HOME="$cache/cargo-home"
@@ -21,6 +24,8 @@ export CARGO_NET_OFFLINE=true
 export RUSTUP_TOOLCHAIN=1.91.0-x86_64-unknown-linux-gnu
 export CLANG_BASE_PATH="$cache/clang"
 export LIBCLANG_PATH="$libclang"
+export LD_LIBRARY_PATH="$llvm19_lib"
+export BINDGEN_EXTRA_CLANG_ARGS="-resource-dir=$libclang/clang/19"
 export GN="$gn"
 export NINJA="$ninja"
 export V8_FROM_SOURCE=1
@@ -32,8 +37,13 @@ export TZ=UTC
 export NUM_JOBS=8
 
 python3 scripts/governed/verify_inputs.py --require-submodules
-cargo build --frozen --release --target x86_64-unknown-linux-gnu --features simdutf -j8
-cargo test --frozen --release --target x86_64-unknown-linux-gnu --features simdutf --test test_api get_version -- --exact \
-  > "$target/fixed-verification.txt" 2>&1
+build_log="$target/governed-build.log"
+if cargo build --frozen --release --target x86_64-unknown-linux-gnu --features simdutf -j8 > "$build_log" 2>&1; then
+  cat "$build_log"
+else
+  cat "$build_log" >&2
+  exit 1
+fi
+cargo test --frozen --release --target x86_64-unknown-linux-gnu --features simdutf --test test_api get_version -- --exact > "$target/fixed-verification.txt" 2>&1
 python3 scripts/governed/collect_evidence.py
 python3 scripts/governed/verify_release.py governed-out/v150.2.0

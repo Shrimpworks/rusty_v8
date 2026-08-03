@@ -135,6 +135,7 @@ def main():
 
     cargo_lock = tomllib.loads((ROOT / "Cargo.lock").read_text())
     source_lock = json.loads((GOV / "source.lock.json").read_text())
+    governed_head = run(["git", "rev-parse", "HEAD"]).strip()
     components = []
     for package in cargo_lock["package"]:
         component = {"type": "library", "name": package["name"], "version": package["version"]}
@@ -164,7 +165,13 @@ def main():
     subjects = [path for path in sorted(OUT.iterdir()) if path.name not in {"artifact-sha256sums.txt", "provenance.intoto.json", "release-manifest.json"}]
     sums = "".join(f"{sha(path)}  {path.name}\n" for path in subjects)
     (OUT / "artifact-sha256sums.txt").write_text(sums)
-    materials = [{"uri": source_lock["upstream"]["repository"], "digest": {"gitCommit": source_lock["upstream"]["commit"]}}]
+    materials = [
+        {
+            "uri": "https://github.com/dills122/rusty_v8.git",
+            "digest": {"gitCommit": governed_head},
+        },
+        {"uri": source_lock["upstream"]["repository"], "digest": {"gitCommit": source_lock["upstream"]["commit"]}},
+    ]
     materials.extend({"uri": item["url"], "digest": {"gitCommit": item["commit"]}} for item in source_lock["gitlinks"])
     provenance = {
         "_type": "https://in-toto.io/Statement/v1",
@@ -181,7 +188,14 @@ def main():
     }
     (OUT / "provenance.intoto.json").write_text(json.dumps(provenance, indent=2, sort_keys=True) + "\n")
     manifest_files = {path.name: {"sha256": sha(path), "size": path.stat().st_size} for path in sorted(OUT.iterdir()) if path.name != "release-manifest.json"}
-    manifest = {"schemaVersion": 1, "profile": "linux-amd64-release-simdutf-v1", "unsigned": True, "admitted": False, "files": manifest_files}
+    manifest = {
+        "schemaVersion": 1,
+        "profile": "linux-amd64-release-simdutf-v1",
+        "sourceCommit": governed_head,
+        "unsigned": True,
+        "admitted": False,
+        "files": manifest_files,
+    }
     (OUT / "release-manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
 
 

@@ -67,7 +67,8 @@ A build is publication-eligible only as one indivisible unsigned bundle:
   from `project.json`, Ninja graph/dependencies, archive members, exact
   submodules, and tool versions;
 - CycloneDX 1.6 `sbom.cdx.json`;
-- unsigned in-toto `provenance.intoto.json` with exact materials and subjects;
+- unsigned in-toto `provenance.intoto.json` with the exact governed fork head,
+  upstream/gitlink materials, and artifact subjects;
 - `artifact-sha256sums.txt`, `release-manifest.json`, and fixed verification
   output.
 

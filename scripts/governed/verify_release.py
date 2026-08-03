@@ -35,11 +35,22 @@ def main():
     manifest = json.loads((bundle / "release-manifest.json").read_text())
     if manifest.get("admitted") is not False or manifest.get("unsigned") is not True:
         fail("bootstrap manifest must be unsigned and unadmitted")
+    governed_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    if manifest.get("sourceCommit") != governed_head:
+        fail("manifest source commit differs from the governed checkout")
     for name, record in manifest["files"].items():
         path = bundle / name
         if not path.is_file() or sha(path) != record["sha256"] or path.stat().st_size != record["size"]:
             fail(f"manifest mismatch for {name}")
-    subjects = {item["name"]: item["digest"]["sha256"] for item in json.loads((bundle / "provenance.intoto.json").read_text())["subject"]}
+    provenance = json.loads((bundle / "provenance.intoto.json").read_text())
+    subjects = {item["name"]: item["digest"]["sha256"] for item in provenance["subject"]}
+    materials = provenance["predicate"]["buildDefinition"]["resolvedDependencies"]
+    if not any(
+        item.get("uri") == "https://github.com/dills122/rusty_v8.git"
+        and item.get("digest", {}).get("gitCommit") == governed_head
+        for item in materials
+    ):
+        fail("provenance omits the governed fork source commit")
     sums = {}
     for line in (bundle / "artifact-sha256sums.txt").read_text().splitlines():
         digest, name = line.split("  ", 1)

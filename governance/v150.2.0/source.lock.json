@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "upstream": {
+    "repository": "https://github.com/denoland/rusty_v8.git",
+    "tag": "v150.2.0",
+    "commit": "d305e6afa7736f6e298c30ae6646f7709ee9382b",
+    "tree": "e55bc850420d20b1ea2230eef9da6e26c07ef765"
+  },
+  "v8": {
+    "repository": "https://github.com/denoland/v8.git",
+    "commit": "ac1e23989121713ca642f6650b34deff7b686896",
+    "chromiumBase": "0da5ef4358784bb0af0ff5d5d7c49cdad8931d1e",
+    "version": "15.0.245.2",
+    "patches": [
+      {"order": 1, "commit": "cabd5f6e2c673a000e9c334fdbdf29ab0023da07", "patchSha256": "ba521cc95927ad6f33a55fa2d16ff11fe535fe9d4cab72aa4300ee22774ba23e"},
+      {"order": 2, "commit": "ffe1c78c9443321313d0fd28dec5e468a241d129", "patchSha256": "eb83dceef8691380c3d2eadcc75272bb8bb7ee7b6f437205e992f71ed6f38eb5"},
+      {"order": 3, "commit": "10b91f1f2e3828859868e186eee681882a9a248a", "patchSha256": "997ee5bbce88a0d0104e48fde1224d3ed74a0fc27d389ba9bf5fa7547a4c576b"},
+      {"order": 4, "commit": "ac1e23989121713ca642f6650b34deff7b686896", "patchSha256": "517fcebc819cf4311495ef993fd72474ec996aa5450c86d86d774f326a5e26d1"}
+    ]
+  },
+  "gitlinks": [
+    {"path": "build", "url": "https://github.com/denoland/chromium_build.git", "commit": "8acb33ac8dceef0503443109c0a92988189563ef"},
+    {"path": "buildtools", "url": "https://chromium.googlesource.com/chromium/src/buildtools.git", "commit": "17495e454aae81b581e8b3caccbb53054509b280"},
+    {"path": "third_party/abseil-cpp", "url": "https://chromium.googlesource.com/chromium/src/third_party/abseil-cpp.git", "commit": "d16e32215c3ab90ba57c2e904a5344d85c7353e4"},
+    {"path": "third_party/dragonbox/src", "url": "https://chromium.googlesource.com/external/github.com/jk-jeon/dragonbox.git", "commit": "beeeef91cf6fef89a4d4ba5e95d47ca64ccb3a44"},
+    {"path": "third_party/fast_float/src", "url": "https://chromium.googlesource.com/external/github.com/fastfloat/fast_float.git", "commit": "05087a303dad9c98768b33c829d398223a649bc6"},
+    {"path": "third_party/fp16/src", "url": "https://github.com/Maratyszcza/FP16.git", "commit": "3d2de1816307bac63c16a297e8c4dc501b4076df"},
+    {"path": "third_party/highway/src", "url": "https://chromium.googlesource.com/external/github.com/google/highway.git", "commit": "2607d3b5b0113992fe84d3848859eae13b3b52c1"},
+    {"path": "third_party/icu", "url": "https://chromium.googlesource.com/chromium/deps/icu.git", "commit": "ee5f27adc28bd3f15b2c293f726d14d2e336cbd5"},
+    {"path": "third_party/jinja2", "url": "https://chromium.googlesource.com/chromium/src/third_party/jinja2.git", "commit": "c3027d884967773057bf74b957e3fea87e5df4d7"},
+    {"path": "third_party/libc++/src", "url": "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git", "commit": "5abc7f839700f0f17338434e1c1c6a8c87c00c11"},
+    {"path": "third_party/libc++abi/src", "url": "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git", "commit": "8f11bb1d4438d0239d0dfc1bd9456a9f31629dda"},
+    {"path": "third_party/libunwind/src", "url": "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind.git", "commit": "d6c7a21e978f0adaa43accaad53bc64f0b64f6ec"},
+    {"path": "third_party/llvm-libc/src", "url": "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libc.git", "commit": "9309c117ebae84dd2f9df1ef99de4782162527d5"},
+    {"path": "third_party/markupsafe", "url": "https://chromium.googlesource.com/chromium/src/third_party/markupsafe.git", "commit": "4256084ae14175d38a3ff7d739dca83ae49ccec6"},
+    {"path": "third_party/partition_alloc", "url": "https://chromium.googlesource.com/chromium/src/base/allocator/partition_allocator.git", "commit": "ff3b8b885b8374cbd3902642d94dc737bda93d5d"},
+    {"path": "third_party/rust", "url": "https://chromium.googlesource.com/chromium/src/third_party/rust", "commit": "26e8ff47f18a8d28d6187a04b6a16cb7332356f8"},
+    {"path": "third_party/simdutf", "url": "https://chromium.googlesource.com/chromium/src/third_party/simdutf", "commit": "f7356eed293f8208c40b3c1b344a50bd70971983"},
+    {"path": "tools/clang", "url": "https://chromium.googlesource.com/chromium/src/tools/clang.git", "commit": "45f4b9e25124809497a27a8ae0e63d603b0f9f1b"},
+    {"path": "tools/win", "url": "https://chromium.googlesource.com/chromium/src/tools/win", "commit": "faefd1b6fa9eeb033ad6fe60368ccb9bf908cbd0"},
+    {"path": "v8", "url": "https://github.com/denoland/v8.git", "commit": "ac1e23989121713ca642f6650b34deff7b686896"}
+  ]
+}

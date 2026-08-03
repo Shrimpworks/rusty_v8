@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    "artifact-sha256sums.txt",
+    "build-metadata.tar.gz",
+    "corresponding-source.tar.gz",
+    "fixed-verification.txt",
+    "librusty_v8_simdutf_release_x86_64-unknown-linux-gnu.a.gz",
+    "licenses-notices.tar.gz",
+    "provenance.intoto.json",
+    "release-manifest.json",
+    "sbom.cdx.json",
+    "src_binding_simdutf_release_x86_64-unknown-linux-gnu.rs"
+  ]
+}

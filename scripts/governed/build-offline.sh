@@ -7,12 +7,14 @@ target="$root/target/governed-v150.2.0"
 gn="$cache/gn/gn"
 ninja="$cache/ninja/ninja"
 libclang="$cache/llvm19/usr/lib/llvm-19/lib"
+llvm19_lib="$cache/llvm19/usr/lib/x86_64-linux-gnu"
 
 test "$(pwd)" = /workspace
 test -x "$gn"
 test -x "$ninja"
 test -x "$cache/clang/bin/clang"
 test -e "$libclang/libclang-19.so.19"
+test -e "$llvm19_lib/libLLVM.so.19.1"
 test -d "$libclang/clang/19/include"
 test -f "$cache/prefetch-evidence.json"
 
@@ -22,6 +24,7 @@ export CARGO_NET_OFFLINE=true
 export RUSTUP_TOOLCHAIN=1.91.0-x86_64-unknown-linux-gnu
 export CLANG_BASE_PATH="$cache/clang"
 export LIBCLANG_PATH="$libclang"
+export LD_LIBRARY_PATH="$llvm19_lib"
 export BINDGEN_EXTRA_CLANG_ARGS="-resource-dir=$libclang/clang/19"
 export GN="$gn"
 export NINJA="$ninja"

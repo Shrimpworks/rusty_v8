@@ -6,11 +6,15 @@ cache="$root/.governed-cache"
 target="$root/target/governed-v150.2.0"
 gn="$cache/gn/gn"
 ninja="$cache/ninja/ninja"
+libclang="$cache/libclang-runtime/usr/lib/x86_64-linux-gnu"
 
 test "$(pwd)" = /workspace
 test -x "$gn"
 test -x "$ninja"
 test -x "$cache/clang/bin/clang"
+test -e "$libclang/libclang-14.so.1"
+test -e "$libclang/libLLVM-14.so.1"
+test -e "$libclang/libz3.so.4"
 test -f "$cache/prefetch-evidence.json"
 
 export CARGO_HOME="$cache/cargo-home"
@@ -18,7 +22,8 @@ export CARGO_TARGET_DIR="$target"
 export CARGO_NET_OFFLINE=true
 export RUSTUP_TOOLCHAIN=1.91.0-x86_64-unknown-linux-gnu
 export CLANG_BASE_PATH="$cache/clang"
-export LIBCLANG_PATH="$cache/clang/lib"
+export LIBCLANG_PATH="$libclang"
+export LD_LIBRARY_PATH="$libclang"
 export GN="$gn"
 export NINJA="$ninja"
 export V8_FROM_SOURCE=1

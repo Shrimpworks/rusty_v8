@@ -85,6 +85,18 @@ def main():
         shutil.rmtree(clang_dir, ignore_errors=True)
         safe_extract_tar(clang_archive, clang_dir)
 
+    libclang_root = CACHE / "libclang-runtime"
+    libclang_packages = LOCK["bindgenLibclang"]["packages"]
+    package_archives = []
+    for package in libclang_packages:
+        archive = CACHE / "downloads" / f"{package['name']}_{package['version'].replace(':', '_')}_amd64.deb"
+        download(package["url"], package["sha256"], archive)
+        package_archives.append((package, archive))
+    shutil.rmtree(libclang_root, ignore_errors=True)
+    libclang_root.mkdir(parents=True)
+    for _package, archive in package_archives:
+        subprocess.run(["dpkg-deb", "--extract", str(archive), str(libclang_root)], check=True)
+
     rust_archive = CACHE / "downloads" / "v8-rust-toolchain.tar.xz"
     toolchain = LOCK["v8RustToolchain"]
     download(toolchain["url"], toolchain["sha256"], rust_archive)
@@ -117,6 +129,9 @@ def main():
             "v8RustToolchain": digest(rust_archive),
             "gn": digest(CACHE / "downloads" / f"{LOCK['gn']['archiveSha256']}.zip"),
             "ninja": digest(CACHE / "downloads" / f"{LOCK['ninja']['archiveSha256']}.zip"),
+            "bindgenLibclang": {
+                package["name"]: digest(archive) for package, archive in package_archives
+            },
         },
     }
     (CACHE / "prefetch-evidence.json").write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n")

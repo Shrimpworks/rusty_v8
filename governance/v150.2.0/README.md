@@ -189,6 +189,26 @@ mode `full-arm64`. A skipped draft job is not build success. The workflow has
 read-only repository permission, a digest-pinned upload action, and no release,
 signing, or admission step.
 
+## Observed Linux/arm64 result
+
+The exact clean attempt at governed fork commit
+`e84e27bee18b39194225ab5c0e19551983fc1659` is retained as
+`arm64-clean-build-blocker.json`. Digest-only prefetch completed with 263 Cargo
+archives. The decisive container began with empty arm64 target/output state, no
+compiler object cache, and networking disabled. It then stopped before GN
+generation because `build.rs` checked a legacy `debian_sid_arm64-sysroot` path;
+the upstream installer did not find its URL `.stamp` in the already-extracted
+locked Bullseye arm64 sysroot and attempted the same locked URL. Network-none
+enforcement refused that request. No archive, binding, fixed test, evidence
+bundle, publication, signing, or admission resulted.
+
+Prefetch now writes the installer-compatible exact URL stamp after verifying
+and extracting each locked sysroot. This deterministic handoff correction does
+not add an input or enable build networking. In accordance with the fail-closed
+stop condition, the decisive build was not retried in this task; only contract
+and static verification cover the correction. Full arm64 success remains
+unclaimed until the gated job completes from a new clean state.
+
 ## Ownership and update policy
 
 - Owner: `dills122/rusty_v8` maintainers; Capsule runtime/supply-chain reviewers

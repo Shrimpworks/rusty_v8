@@ -97,6 +97,11 @@ def install_sysroots(downloads):
         destination = ROOT / item["directory"]
         shutil.rmtree(destination, ignore_errors=True)
         safe_extract_tar(archive, destination)
+        # build.rs checks a legacy debian_sid_* path and may call the upstream
+        # installer even though the lock's bullseye directory is present. The
+        # installer itself uses this exact URL stamp to prove the declared
+        # sysroot is already installed and return without network access.
+        (destination / ".stamp").write_text(item["url"])
         downloads[f"sysroot-{item['arch']}"] = digest(archive)
 
 

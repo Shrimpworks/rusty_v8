@@ -222,12 +222,25 @@ resolve target header `bits/wordsize.h`. Cargo therefore failed closed before
 the fixed test, evidence bundle, upload, publication, signing, or admission.
 
 The required target header was independently confirmed inside the already
-locked `libc6-dev-arm64-cross` archive with its declared SHA-256. The follow-up
-bindgen correction explicitly selects `aarch64-linux-gnu` and that pinned target
-include directory, and prefetch/build now refuse a closure missing the relevant
-glibc headers. No package, digest, source gitlink, output cap, amd64 contract, or
-network policy changes. Full arm64 success remains unclaimed until the gated job
-completes from a new clean state.
+locked `libc6-dev-arm64-cross` archive with its declared SHA-256. Prefetch and
+build now refuse a closure missing the relevant glibc headers.
+
+The first header-path correction at
+`c92651bf4986817d36039154724030e87c8a1d5b` was deliberately dispatched from
+draft PR #4 and is retained as `arm64-clean-build-blocker-gn-bindgen.json`.
+Prefetch passed, but the profile-wide `BINDGEN_EXTRA_CLANG_ARGS` also reached
+Chromium's x64 host-tool bindgen action. That action retained its correct
+`--target=x86_64-unknown-linux-gnu` and `-msse3` arguments, then the leaked final
+arm64 target override made Clang reject the x64 flag at Ninja action 36 of 4,337.
+The build stopped before any intermediate archive, fixed test, bundle, or
+upload.
+
+The next correction removes global bindgen state. The final rusty_v8 binding
+builder alone reads the governed glibc sysroot and libclang resource-directory
+variables; Chromium's generated host and target bindgen actions remain
+unchanged. No package, digest, source gitlink, output cap, amd64 contract, or
+network policy changes. Full arm64 success remains unclaimed until the gated
+job completes from a new clean state.
 
 ## Ownership and update policy
 

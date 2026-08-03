@@ -39,6 +39,8 @@ fn main() {
     "NINJA",
     "OUT_DIR",
     "RUSTY_V8_ARCHIVE",
+    "RUSTY_V8_BINDGEN_RESOURCE_DIR",
+    "RUSTY_V8_GLIBC_SYSROOT",
     "RUSTY_V8_MIRROR",
     "RUSTY_V8_SRC_BINDING_PATH",
     "SCCACHE",
@@ -199,7 +201,9 @@ fn build_binding() {
     clang_args.push(sdk_path.trim().to_string());
   } else if target_os == "linux" {
     // Add clang resource directory for builtin headers (stddef.h, etc)
-    if let Ok(libclang_path) = env::var("LIBCLANG_PATH") {
+    if let Ok(resource_dir) = env::var("RUSTY_V8_BINDGEN_RESOURCE_DIR") {
+      clang_args.push(format!("-resource-dir={resource_dir}"));
+    } else if let Ok(libclang_path) = env::var("LIBCLANG_PATH") {
       let clang_dir = PathBuf::from(&libclang_path)
         .parent()
         .unwrap()
@@ -221,6 +225,12 @@ fn build_binding() {
       && let Ok(sysroot) = env::var("RUSTY_V8_MUSL_SYSROOT")
     {
       clang_args.push(format!("--sysroot={sysroot}"));
+    } else if target_env == "gnu"
+      && let Ok(sysroot) = env::var("RUSTY_V8_GLIBC_SYSROOT")
+    {
+      let target_triple = env::var("TARGET").unwrap();
+      clang_args.push(format!("--target={target_triple}"));
+      clang_args.push(format!("-isystem{sysroot}/include"));
     }
   } else if target_os == "ios" {
     // iOS: point bindgen at the iOS (device) or iOS-simulator SDK and set the

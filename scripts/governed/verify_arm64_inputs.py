@@ -106,13 +106,17 @@ def main():
         fail("unexpected Rust toolchain or target")
     if builder["cargo"]["hostToolchainPath"] != "/usr/local/rustup/toolchains/1.91.0-x86_64-unknown-linux-gnu":
         fail("unexpected builder-image Rust toolchain path")
-    expected_bindgen_args = (
-        "--target=aarch64-linux-gnu "
-        "-isystem/workspace/.governed-cache-arm64/cross/usr/aarch64-linux-gnu/include "
-        "-resource-dir=/workspace/.governed-cache-arm64/llvm19/usr/lib/llvm-19/lib/clang/19"
-    )
-    if builder["environment"]["BINDGEN_EXTRA_CLANG_ARGS"] != expected_bindgen_args:
+    environment = builder["environment"]
+    if "BINDGEN_EXTRA_CLANG_ARGS" in environment:
+        fail("global bindgen arguments would leak into Chromium host tools")
+    if environment["RUSTY_V8_GLIBC_SYSROOT"] != (
+        "/workspace/.governed-cache-arm64/cross/usr/aarch64-linux-gnu"
+    ):
         fail("unexpected arm64 bindgen target/header closure")
+    if environment["RUSTY_V8_BINDGEN_RESOURCE_DIR"] != (
+        "/workspace/.governed-cache-arm64/llvm19/usr/lib/llvm-19/lib/clang/19"
+    ):
+        fail("unexpected arm64 bindgen resource directory")
     for key in ("rustcCommit", "cargoCommit"):
         if not re.fullmatch(r"[0-9a-f]{40}", builder["cargo"][key]):
             fail(f"invalid {key}")

@@ -63,7 +63,8 @@ export RUSTC="$rust_toolchain/bin/rustc"
 export CLANG_BASE_PATH="$cache/clang"
 export LIBCLANG_PATH="$libclang"
 export LD_LIBRARY_PATH="$llvm19_lib"
-export BINDGEN_EXTRA_CLANG_ARGS="--target=aarch64-linux-gnu -isystem$target_include -resource-dir=$libclang/clang/19"
+export RUSTY_V8_BINDGEN_RESOURCE_DIR="$libclang/clang/19"
+export RUSTY_V8_GLIBC_SYSROOT="$target_root"
 export GN="$gn"
 export NINJA="$ninja"
 export V8_FROM_SOURCE=1
@@ -75,7 +76,7 @@ export TZ=UTC
 export NUM_JOBS=8
 export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER="$linker"
 export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER="$runner -L $target_root"
-unset SCCACHE CCACHE RUSTC_WRAPPER
+unset SCCACHE CCACHE RUSTC_WRAPPER BINDGEN_EXTRA_CLANG_ARGS
 
 python3 scripts/governed/verify_arm64_inputs.py --require-submodules
 build_log="$target/governed-build.log"

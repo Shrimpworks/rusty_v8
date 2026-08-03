@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "claim": "no-complete-arm64-build-no-test-no-bundle-no-publication-no-admission",
+  "governedForkCommit": "c92651bf4986817d36039154724030e87c8a1d5b",
+  "governedBaselineMergeCommit": "eddede228a9214c4dfb6a85aeca22abc0679100d",
+  "profile": "linux-arm64-release-simdutf-v1",
+  "builderImage": "docker.io/library/rust@sha256:307d198027388f780db83929487de35084a73ecbaa31319989438db38103439f",
+  "execution": {
+    "provider": "GitHub Actions",
+    "runId": 30858616538,
+    "jobId": 91835413091,
+    "runUrl": "https://github.com/dills122/rusty_v8/actions/runs/30858616538",
+    "jobUrl": "https://github.com/dills122/rusty_v8/actions/runs/30858616538/job/91835413091",
+    "runner": "ubuntu-24.04",
+    "startedAt": "2026-08-03T22:26:13Z",
+    "completedAt": "2026-08-03T22:32:28Z",
+    "conclusion": "failure"
+  },
+  "prefetch": {
+    "completed": true,
+    "cargoArchiveCount": 263,
+    "startedAt": "2026-08-03T22:29:48Z",
+    "completedAt": "2026-08-03T22:31:37Z"
+  },
+  "cleanBuild": {
+    "networkMode": "none",
+    "targetDirectoryExisted": false,
+    "outputDirectoryExisted": false,
+    "sccachePresent": false,
+    "ccachePresent": false,
+    "startedAt": "2026-08-03T22:31:37Z",
+    "completedAt": "2026-08-03T22:32:24Z"
+  },
+  "observedProgress": {
+    "ninjaActionsCompletedBeforeFailure": 35,
+    "ninjaActionsTotal": 4337,
+    "intermediateArchiveProduced": false,
+    "bindgenCompleted": false,
+    "getVersionTestRan": false,
+    "bundleProduced": false
+  },
+  "failure": {
+    "phase": "v8-gn-host-tool-bindgen",
+    "exitStatus": 101,
+    "targetBeforeOverride": "x86_64-unknown-linux-gnu",
+    "leakedTargetOverride": "aarch64-linux-gnu",
+    "message": "The profile-wide BINDGEN_EXTRA_CLANG_ARGS leaked into Chromium's x64 host-tool bindgen invocation, so its valid -msse3 host flag was parsed against the arm64 target.",
+    "diagnostic": "Unable to generate bindings: clang diagnosed error: error: unsupported option '-msse3' for target 'aarch64-linux-gnu'"
+  },
+  "failClosedAction": {
+    "mutablePackageInstall": false,
+    "networkEnabledForBuild": false,
+    "amd64Substitution": false,
+    "objectCacheReuse": false,
+    "artifactUpload": false,
+    "automaticRetry": false
+  },
+  "nextBoundary": "Scope the pinned resource directory and glibc target sysroot to rusty_v8's final binding builder instead of global bindgen state, retain Chromium's generated host/target arguments unchanged, and dispatch a new exact-head full-arm64 run. Success still requires empty target/output state, network-disabled build and bindgen, fixed get_version test, evidence collection, bundle verification, and exact artifact identities."
+}

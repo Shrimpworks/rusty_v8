@@ -62,8 +62,9 @@ A build is publication-eligible only as one indivisible unsigned bundle:
   exact gitlinks;
 - `licenses-notices.tar.gz`, containing every retained license, copying,
   notice, authors, and `README.chromium` file from that source set;
-- `build-metadata.tar.gz`, including `args.gn`, `build.ninja`, the governed GN
-  target from `project.json`, Ninja graph/dependencies, archive members, exact
+- `build-metadata.tar.gz`, including `args.gn`, the captured build log with
+  `PRINT_GN_ARGS=1`, `build.ninja`, generated build settings and governed target
+  from `project.json`, Ninja graph/dependencies, archive members, exact
   submodules, and tool versions;
 - CycloneDX 1.6 `sbom.cdx.json`;
 - unsigned in-toto `provenance.intoto.json` with exact materials and subjects;

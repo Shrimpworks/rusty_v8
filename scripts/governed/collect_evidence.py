@@ -115,7 +115,10 @@ def main():
         (metadata / "gn-target.json").write_text(
             json.dumps({target_label: project["targets"][target_label]}, indent=2, sort_keys=True) + "\n"
         )
-        (metadata / "effective-gn-args.txt").write_text(run([str(gn), "args", str(GN_OUT), "--list"]))
+        (metadata / "generated-build-settings.json").write_text(
+            json.dumps(project["build_settings"], indent=2, sort_keys=True) + "\n"
+        )
+        shutil.copy2(TARGET / "governed-build.log", metadata / "governed-build.log")
         (metadata / "archive-members.txt").write_text(run(["ar", "t", str(raw_archive)]))
         (metadata / "submodules.txt").write_text(run(["git", "submodule", "status", "--recursive"]))
         versions = {

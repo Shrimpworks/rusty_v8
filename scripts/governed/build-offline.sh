@@ -37,7 +37,13 @@ export TZ=UTC
 export NUM_JOBS=8
 
 python3 scripts/governed/verify_inputs.py --require-submodules
-cargo build --frozen --release --target x86_64-unknown-linux-gnu --features simdutf -j8
+build_log="$target/governed-build.log"
+if cargo build --frozen --release --target x86_64-unknown-linux-gnu --features simdutf -j8 > "$build_log" 2>&1; then
+  cat "$build_log"
+else
+  cat "$build_log" >&2
+  exit 1
+fi
 cargo test --frozen --release --target x86_64-unknown-linux-gnu --features simdutf --test test_api get_version -- --exact > "$target/fixed-verification.txt" 2>&1
 python3 scripts/governed/collect_evidence.py
 python3 scripts/governed/verify_release.py governed-out/v150.2.0

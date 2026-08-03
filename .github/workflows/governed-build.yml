@@ -35,7 +35,7 @@ jobs:
           python3 -m json.tool governance/v150.2.0/source.lock.json >/dev/null
           python3 -m json.tool governance/v150.2.0/retained-pr56-evidence.json >/dev/null
           python3 -m json.tool governance/v150.2.0/expected-outputs.json >/dev/null
-          git diff --check capsule/upstream-v150.2.0-d305e6a...HEAD
+          git diff --check d305e6afa7736f6e298c30ae6646f7709ee9382b...HEAD
 
   full-build:
     if: github.event_name == 'workflow_dispatch' && inputs.mode == 'full'

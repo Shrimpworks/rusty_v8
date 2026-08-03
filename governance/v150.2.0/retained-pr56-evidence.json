@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "classification": "retained-historical-evidence-not-builder-input",
+  "capsulePullRequest": "https://github.com/dills122/capsule-corp/pull/56",
+  "rustyV8Commit": "d305e6afa7736f6e298c30ae6646f7709ee9382b",
+  "crate": {
+    "name": "v8",
+    "version": "150.2.0",
+    "sha256": "c7f4e905df70d6c00b95e69c5f0831fd5eb5889b0116ae2b30293578c19cd1bc"
+  },
+  "officialArchive": {
+    "target": "aarch64-unknown-linux-gnu",
+    "variant": "release-simdutf",
+    "sha256": "8d91df74c8a671c23f880e64038023f49e07ca85c96e15d76a87e2aac9b20595",
+    "releaseId": 355124236,
+    "assetId": 479244251,
+    "actionsRun": 29503514733,
+    "actionsAttempt": 2,
+    "actionsJob": 87701498072
+  },
+  "v8Commit": "ac1e23989121713ca642f6650b34deff7b686896",
+  "chromiumV8Base": "0da5ef4358784bb0af0ff5d5d7c49cdad8931d1e",
+  "v8Version": "15.0.245.2",
+  "decision": "SOURCE-LICENSE-CLOSURE-NO-GO",
+  "reason": "The official archive did not retain immutable publisher inputs, effective GN/Ninja closure, complete generated notices/corresponding source, or independent reproduction."
+}

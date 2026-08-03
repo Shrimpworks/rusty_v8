@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "profile": "linux-amd64-release-simdutf-v1",
+  "workspace": "/workspace",
+  "sourceDateEpoch": 1784209467,
+  "target": "x86_64-unknown-linux-gnu",
+  "cargo": {
+    "toolchain": "1.91.0",
+    "locked": true,
+    "offlineBuild": true,
+    "jobs": 8,
+    "features": ["simdutf"]
+  },
+  "builderImage": {
+    "repository": "docker.io/library/rust",
+    "tagForReferenceOnly": "1.91.0-bookworm",
+    "indexDigest": "sha256:e187887ec511b3d93e45c0231d2f0fd59f1347526c58aa86343aa83c74f3e1a9",
+    "linuxAmd64Digest": "sha256:307d198027388f780db83929487de35084a73ecbaa31319989438db38103439f"
+  },
+  "clang": {
+    "revision": "llvmorg-23-init-10931-g20b6ec66-11",
+    "url": "https://commondatastorage.googleapis.com/chromium-browser-clang/Linux_x64/clang-llvmorg-23-init-10931-g20b6ec66-11.tar.xz",
+    "sha256": "de584381536aa5ba2403033c4f8b70f3c39c2e5d7fa87c953b7fd8bfbba0ee2a",
+    "size": 69635068
+  },
+  "gn": {
+    "package": "gn/gn/linux-amd64",
+    "version": "git_revision:3357c4f51b1a9e676378c695dd9c7e9911c35ee6",
+    "instanceId": "2w75WgzO2nc2UMXt6PDqnK3LCqbHZ-11ME5WIr4hJQQC",
+    "archiveSha256": "db0ef95a0cceda773650c5ede8f0ea9cadcb0aa6c767ed75304e5622be212504"
+  },
+  "ninja": {
+    "package": "infra/3pp/tools/ninja/linux-amd64",
+    "version": "version:3@1.12.1.chromium.4",
+    "instanceId": "Px8cwPaaG8_fZ_tsK8dBmx3YEruNDnmvqb-oo1U7UIIC",
+    "archiveSha256": "3f1f1cc0f69a1bcfdf67fb6c2bc7419b1dd812bb8d0e79afa9bfa8a3553b5082"
+  },
+  "sysroot": {
+    "arch": "amd64",
+    "url": "https://commondatastorage.googleapis.com/chrome-linux-sysroot/52d61d4446ffebfaa3dda2cd02da4ab4876ff237853f46d273e7f9b666652e1d",
+    "sha256": "52d61d4446ffebfaa3dda2cd02da4ab4876ff237853f46d273e7f9b666652e1d"
+  },
+  "v8RustToolchain": {
+    "url": "https://storage.googleapis.com/chromium-browser-clang/Linux_x64/rust-toolchain-4c4205163abcbd08948b3efab796c543ba1ea687-4-llvmorg-23-init-10931-g20b6ec66.tar.xz",
+    "sha256": "832de79f8d90940f4aaef023f83a00c1e7210c023f4d57f606b7bf9831c889aa",
+    "size": 274393124
+  },
+  "githubActions": {
+    "checkout": "actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955",
+    "uploadArtifact": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02"
+  },
+  "environment": {
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "TZ": "UTC",
+    "V8_FROM_SOURCE": "1",
+    "PRINT_GN_ARGS": "1",
+    "CARGO_NET_OFFLINE": "true",
+    "RUSTUP_TOOLCHAIN": "1.91.0-x86_64-unknown-linux-gnu"
+  }
+}

@@ -1,0 +1,59 @@
+name: governed-build-v150.2.0
+
+on:
+  pull_request:
+    branches:
+      - capsule/upstream-v150.2.0-d305e6a
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Contract verification or the full network-bounded build
+        required: true
+        default: contract
+        type: choice
+        options:
+          - contract
+          - full
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out exact review tree
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          fetch-depth: 0
+      - name: Verify governed locks
+        run: python3 scripts/governed/verify_inputs.py
+      - name: Verify scripts and JSON
+        run: |
+          python3 -m py_compile scripts/governed/*.py
+          python3 -m json.tool governance/v150.2.0/builder.lock.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/source.lock.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/retained-pr56-evidence.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/expected-outputs.json >/dev/null
+          git diff --check d305e6afa7736f6e298c30ae6646f7709ee9382b...HEAD
+
+  full-build:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'full'
+    needs: contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - name: Check out exact source closure
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Build with connected prefetch and network-none compilation
+        run: scripts/governed/run-builder.sh all
+      - name: Upload unsigned governed bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: rusty-v8-v150.2.0-linux-amd64-unsigned
+          path: governed-out/v150.2.0/
+          if-no-files-found: error
+          retention-days: 30

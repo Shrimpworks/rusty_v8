@@ -27,10 +27,10 @@ export SOURCE_DATE_EPOCH=1784209467
 export LANG=C.UTF-8
 export LC_ALL=C.UTF-8
 export TZ=UTC
-export NUM_JOBS=1
+export NUM_JOBS=8
 
 python3 scripts/governed/verify_inputs.py --require-submodules
-cargo build --frozen --release --target x86_64-unknown-linux-gnu --features simdutf -j1
+cargo build --frozen --release --target x86_64-unknown-linux-gnu --features simdutf -j8
 cargo test --frozen --release --target x86_64-unknown-linux-gnu --features simdutf --test test_api get_version -- --exact \
   > "$target/fixed-verification.txt" 2>&1
 python3 scripts/governed/collect_evidence.py

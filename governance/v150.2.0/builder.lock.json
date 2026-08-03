@@ -8,7 +8,7 @@
     "toolchain": "1.91.0",
     "locked": true,
     "offlineBuild": true,
-    "jobs": 1,
+    "jobs": 8,
     "features": ["simdutf"]
   },
   "builderImage": {

@@ -17,7 +17,7 @@ The first build profile is deliberately narrow:
 - fixed workspace path `/workspace` and `SOURCE_DATE_EPOCH=1784209467`;
 - exact official Rust 1.91.0 Bookworm builder image by platform digest;
 - networked input acquisition followed by a Docker `--network none` build;
-- Cargo `--frozen`, offline mode, one build job, UTC and `C.UTF-8`.
+- Cargo `--frozen`, offline mode, a fixed eight-job build, UTC and `C.UTF-8`.
 
 Linux/arm64 is not silently substituted by this profile. It remains required
 before Capsule can replace the retained Linux/arm64 archive evidence.

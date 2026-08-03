@@ -4,6 +4,12 @@ on:
   pull_request:
     branches:
       - capsule/upstream-v150.2.0-d305e6a
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - converted_to_draft
   workflow_dispatch:
     inputs:
       mode:
@@ -14,6 +20,7 @@ on:
         options:
           - contract
           - full
+          - full-arm64
 
 permissions:
   contents: read
@@ -35,6 +42,10 @@ jobs:
           python3 -m json.tool governance/v150.2.0/source.lock.json >/dev/null
           python3 -m json.tool governance/v150.2.0/retained-pr56-evidence.json >/dev/null
           python3 -m json.tool governance/v150.2.0/expected-outputs.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/builder-linux-arm64.lock.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/expected-outputs-linux-arm64.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/arm64-clean-build-blocker.json >/dev/null
+          python3 scripts/governed/verify_arm64_inputs.py
           git diff --check d305e6afa7736f6e298c30ae6646f7709ee9382b...HEAD
 
   full-build:
@@ -55,5 +66,28 @@ jobs:
         with:
           name: rusty-v8-v150.2.0-linux-amd64-unsigned
           path: governed-out/v150.2.0/
+          if-no-files-found: error
+          retention-days: 30
+
+  arm64-full-build:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.mode == 'full-arm64') ||
+      (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
+    needs: contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - name: Check out exact arm64 source closure
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Build arm64 with digest-only prefetch and network-none compilation
+        run: scripts/governed/run-arm64-builder.sh all
+      - name: Upload unsigned unadmitted arm64 bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: rusty-v8-v150.2.0-linux-arm64-unsigned
+          path: governed-out/v150.2.0/linux-arm64/
           if-no-files-found: error
           retention-days: 30

@@ -8,6 +8,7 @@
 /target/
 /.cipd/
 /.governed-cache/
+/.governed-cache-arm64/
 /governed-out/
 /scripts/governed/__pycache__/
 

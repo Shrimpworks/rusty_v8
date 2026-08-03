@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "profile": "linux-arm64-release-simdutf-v1",
+  "maxTotalBytes": 2147483648,
+  "files": [
+    {"name": "artifact-sha256sums.txt", "maxBytes": 65536},
+    {"name": "build-metadata.tar.gz", "maxBytes": 536870912},
+    {"name": "corresponding-source.tar.gz", "maxBytes": 1073741824},
+    {"name": "fixed-verification.txt", "maxBytes": 1048576},
+    {"name": "librusty_v8_simdutf_release_aarch64-unknown-linux-gnu.a.gz", "maxBytes": 536870912},
+    {"name": "licenses-notices.tar.gz", "maxBytes": 268435456},
+    {"name": "provenance.intoto.json", "maxBytes": 4194304},
+    {"name": "release-manifest.json", "maxBytes": 1048576},
+    {"name": "sbom.cdx.json", "maxBytes": 16777216},
+    {"name": "sbom.spdx.json", "maxBytes": 16777216},
+    {"name": "src_binding_simdutf_release_aarch64-unknown-linux-gnu.rs", "maxBytes": 67108864}
+  ]
+}

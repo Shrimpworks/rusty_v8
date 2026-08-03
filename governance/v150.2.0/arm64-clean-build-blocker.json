@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "claim": "no-arm64-build-no-test-no-bundle-no-publication-no-admission",
+  "governedForkCommit": "e84e27bee18b39194225ab5c0e19551983fc1659",
+  "baselineMergeCommit": "a31b8f39dc6933d5635367e8ccb67d70f2cc2385",
+  "profile": "linux-arm64-release-simdutf-v1",
+  "builderImage": "docker.io/library/rust@sha256:307d198027388f780db83929487de35084a73ecbaa31319989438db38103439f",
+  "builderVolume": "rusty-v8-governed-arm64-e84e27bee18b",
+  "host": {
+    "physicalOs": "Darwin",
+    "physicalArchitecture": "arm64",
+    "physicalKernel": "25.5.0",
+    "dockerServerOs": "linux",
+    "dockerServerArchitecture": "arm64",
+    "dockerServerVersion": "29.6.1",
+    "buildPlatform": "linux/amd64",
+    "targetPlatform": "linux/arm64",
+    "method": "cross",
+    "workspaceTransport": "isolated-docker-volume",
+    "independentBuilder": false
+  },
+  "prefetch": {
+    "completed": true,
+    "cargoArchiveCount": 263,
+    "evidenceSha256": "1d2698656c87f0ddf561d6958aeba83c59d15e37510f38f3355632aaf98039ad"
+  },
+  "cleanBuild": {
+    "networkMode": "none",
+    "targetDirectoryExisted": false,
+    "outputDirectoryExisted": false,
+    "sccachePresent": false,
+    "ccachePresent": false,
+    "cleanProofSha256": "dd15b289ff726c9cd73fa35edb66ba8d76b0f321013f4a7157d70011ec2cb4c5",
+    "hostEnvironmentSha256": "6a1c611da3b2e4667e65b4ea7969ed56187756189b4c8e1c8f5d061df300b596",
+    "buildLogSha256": "a4f242247619380c457b2442a12c005be8dcacec0d7bd768be8629c9becd5275"
+  },
+  "failure": {
+    "phase": "cargo-build-v8-build-script-before-gn-generation",
+    "exitStatus": 101,
+    "message": "build.rs invoked install-sysroot.py because its legacy debian_sid_arm64-sysroot sentinel was absent; the installer did not find a .stamp in the already-prefetched bullseye arm64 sysroot and attempted the locked URL; Docker networking was disabled, so the attempt failed closed",
+    "requestedUrl": "https://commondatastorage.googleapis.com/chrome-linux-sysroot/c7176a4c7aacbf46bda58a029f39f79a68008d3dee6518f154dcf5161a5486d8",
+    "requestedSha256": "c7176a4c7aacbf46bda58a029f39f79a68008d3dee6518f154dcf5161a5486d8",
+    "gnGenerated": false,
+    "archiveProduced": false,
+    "bindgenCompleted": false,
+    "getVersionTestRan": false,
+    "bundleProduced": false
+  },
+  "failClosedAction": {
+    "mutablePackageInstall": false,
+    "networkEnabledForBuild": false,
+    "amd64Substitution": false,
+    "objectCacheReuse": false,
+    "decisiveBuildRetried": false,
+    "correction": "prefetch now writes the exact upstream installer URL to each extracted locked sysroot .stamp; this correction has contract/static verification only and the full arm64 build remains deliberately unclaimed"
+  },
+  "nextBoundary": "After review, make the draft PR ready or explicitly dispatch full-arm64 so the corrected exact head receives a new clean prefetch and network-disabled build/test/bundle attempt. Do not rerun Capsule PR #62 evidence until that arm64 job passes, the builder PR merges, and its exact verified artifact identities are available."
+}

@@ -16,7 +16,8 @@ The first build profile is deliberately narrow:
 - release mode, `simdutf` enabled, pointer compression disabled;
 - fixed workspace path `/workspace` and `SOURCE_DATE_EPOCH=1784209467`;
 - exact official Rust 1.91.0 Bookworm builder image by platform digest;
-- matching libclang from the digest-pinned V8 Rust toolchain archive for bindgen;
+- upstream-compatible LLVM 19.1.7 libclang, libLLVM, and builtin headers from
+  apt.llvm.org, each pinned by version, URL, size, SHA-256, and source commit;
 - networked input acquisition followed by a Docker `--network none` build;
 - Cargo `--frozen`, offline mode, a fixed eight-job build, UTC and `C.UTF-8`.
 
@@ -46,9 +47,10 @@ scripts/governed/run-builder.sh build
 ```
 
 `prefetch` is the only phase with container network access. It verifies and
-extracts digest-pinned Clang, sysroot, V8 Rust toolchain, GN and Ninja objects,
-then asks Cargo to fetch only `Cargo.lock`. `build` uses the same pinned builder
-and verified prefetched inputs with `--network none`.
+extracts digest-pinned Clang, LLVM 19 bindgen runtime, sysroot, V8 Rust
+toolchain, GN and Ninja objects, then asks Cargo to fetch the complete
+`Cargo.lock` closure. `build` uses the same pinned builder and verified
+prefetched inputs with `--network none`.
 
 ## Required publication set
 
@@ -60,8 +62,9 @@ A build is publication-eligible only as one indivisible unsigned bundle:
   exact gitlinks;
 - `licenses-notices.tar.gz`, containing every retained license, copying,
   notice, authors, and `README.chromium` file from that source set;
-- `build-metadata.tar.gz`, including `args.gn`, `build.ninja`, GN description,
-  Ninja graph/dependencies, archive members, exact submodules, and tool versions;
+- `build-metadata.tar.gz`, including `args.gn`, `build.ninja`, the governed GN
+  target from `project.json`, Ninja graph/dependencies, archive members, exact
+  submodules, and tool versions;
 - CycloneDX 1.6 `sbom.cdx.json`;
 - unsigned in-toto `provenance.intoto.json` with exact materials and subjects;
 - `artifact-sha256sums.txt`, `release-manifest.json`, and fixed verification
@@ -72,7 +75,7 @@ release permission, signing step, Capsule integration, or admission authority.
 
 ## Verification and claims
 
-`scripts/governed/verify-release.py` recomputes every enumerated digest, checks
+`scripts/governed/verify_release.py` recomputes every enumerated digest, checks
 the provenance subjects, refuses missing or extra bundle files, checks archive
 membership, and requires the fixed upstream `get_version` test result.
 

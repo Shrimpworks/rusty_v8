@@ -108,7 +108,13 @@ def main():
         gn = ROOT / ".governed-cache/gn/gn"
         (metadata / "ninja-graph.dot").write_text(run([str(ninja), "-C", str(GN_OUT), "-t", "graph", "rusty_v8"]))
         (metadata / "ninja-deps.txt").write_text(run([str(ninja), "-C", str(GN_OUT), "-t", "deps", "rusty_v8"]))
-        (metadata / "gn-desc.json").write_text(run([str(gn), "desc", str(GN_OUT), "//:rusty_v8", "--format=json"]))
+        project = json.loads((GN_OUT / "project.json").read_text())
+        target_label = "//:rusty_v8"
+        if target_label not in project["targets"]:
+            raise SystemExit(f"missing governed GN target: {target_label}")
+        (metadata / "gn-target.json").write_text(
+            json.dumps({target_label: project["targets"][target_label]}, indent=2, sort_keys=True) + "\n"
+        )
         (metadata / "effective-gn-args.txt").write_text(run([str(gn), "args", str(GN_OUT), "--list"]))
         (metadata / "archive-members.txt").write_text(run(["ar", "t", str(raw_archive)]))
         (metadata / "submodules.txt").write_text(run(["git", "submodule", "status", "--recursive"]))

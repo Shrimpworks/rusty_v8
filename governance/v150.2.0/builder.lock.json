@@ -23,6 +23,34 @@
     "sha256": "de584381536aa5ba2403033c4f8b70f3c39c2e5d7fa87c953b7fd8bfbba0ee2a",
     "size": 69635068
   },
+  "llvm19Bindgen": {
+    "sourceRepository": "https://github.com/llvm/llvm-project.git",
+    "sourceTag": "llvmorg-19.1.7",
+    "sourceCommit": "cd708029e0b2869e80abe31ddb175f7c35361f90",
+    "packages": [
+      {
+        "name": "libclang-common-19-dev",
+        "version": "1:19.1.7~++20250114103320+cd708029e0b2-1~exp1~20250114103432.75",
+        "url": "https://apt.llvm.org/jammy/pool/main/l/llvm-toolchain-19/libclang-common-19-dev_19.1.7~++20250114103320+cd708029e0b2-1~exp1~20250114103432.75_amd64.deb",
+        "sha256": "638b26d769263d50999fbe8e0b7ded1f9bdf73288f607f2e96407e83071cabae",
+        "size": 772478
+      },
+      {
+        "name": "libclang1-19",
+        "version": "1:19.1.7~++20250114103320+cd708029e0b2-1~exp1~20250114103432.75",
+        "url": "https://apt.llvm.org/jammy/pool/main/l/llvm-toolchain-19/libclang1-19_19.1.7~++20250114103320+cd708029e0b2-1~exp1~20250114103432.75_amd64.deb",
+        "sha256": "65b7074356369e132d9e82c1fb6b2a6e2980ca90c0b90cef4cfc558292a20b7b",
+        "size": 8399998
+      },
+      {
+        "name": "libllvm19",
+        "version": "1:19.1.7~++20250114103320+cd708029e0b2-1~exp1~20250114103432.75",
+        "url": "https://apt.llvm.org/jammy/pool/main/l/llvm-toolchain-19/libllvm19_19.1.7~++20250114103320+cd708029e0b2-1~exp1~20250114103432.75_amd64.deb",
+        "sha256": "558fbf3cf29c1d3d742e47901bda6079128ae2202a6aa3957126d6e674d23541",
+        "size": 28823424
+      }
+    ]
+  },
   "gn": {
     "package": "gn/gn/linux-amd64",
     "version": "git_revision:3357c4f51b1a9e676378c695dd9c7e9911c35ee6",
@@ -52,10 +80,12 @@
   "environment": {
     "LANG": "C.UTF-8",
     "LC_ALL": "C.UTF-8",
+    "LD_LIBRARY_PATH": "/workspace/.governed-cache/llvm19/usr/lib/x86_64-linux-gnu",
     "TZ": "UTC",
     "V8_FROM_SOURCE": "1",
     "PRINT_GN_ARGS": "1",
     "CARGO_NET_OFFLINE": "true",
+    "BINDGEN_EXTRA_CLANG_ARGS": "-resource-dir=/workspace/.governed-cache/llvm19/usr/lib/llvm-19/lib/clang/19",
     "RUSTUP_TOOLCHAIN": "1.91.0-x86_64-unknown-linux-gnu"
   }
 }

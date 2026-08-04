@@ -322,6 +322,31 @@ stages retain bounded logs on failure and do not replace the final fixed
 sysroot contents, networking, cache, or output cap is changed. Full ARM64
 success remains unclaimed until every final stage and bundle verification pass.
 
+The corrected linker/sysroot attempt ran at exact fork head
+`343d1590df1615fb269036b23e3ca6f6aff81284` in GitHub Actions run
+`30911205915`, job `91998224324`, and is retained as
+`arm64-clean-build-blocker-evidence-collection.json`. The early fixed C link
+probe, pinned cross-`readelf`, and pinned QEMU execution all passed. The clean,
+network-disabled ARM64 Cargo release build completed in 108 minutes 37 seconds;
+`cargo test --no-run` then produced exactly one test executable, pinned
+cross-`readelf` identified it as AArch64, and the explicit pinned-QEMU
+`get_version` test passed. This establishes a working ARM64 build and fixed
+test, but not a complete governed bundle.
+
+Post-build evidence collection alone failed when the pinned GN executable was
+invoked as `gn args <out> --list`; bundle verification and the full-bundle
+upload therefore did not run. The checksum-verified bounded blocker artifact
+has GitHub SHA-256
+`214632058b5c02d9c371cefc610fe58d73458221efc718d89096f7148c89b5a7`.
+Before another expensive build, workflow-dispatch mode
+`diagnostic-arm64-gn` fetches only the exact already-declared GN archive and
+uses a fixed minimal GN project to test the exact absolute-path invocation plus
+option-first and relative-path variants inside the digest-pinned builder with
+networking disabled. No collector correction is applied until that short gate
+reproduces the failure and identifies a passing variant. A full ARM64 rerun
+remains gated until the diagnostic succeeds; LLVM, V8 source, packages,
+digests, networking, caches, and the existing amd64 contract are unchanged.
+
 ## Ownership and update policy
 
 - Owner: `dills122/rusty_v8` maintainers; Capsule runtime/supply-chain reviewers

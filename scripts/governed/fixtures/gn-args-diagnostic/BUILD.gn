@@ -1,0 +1,13 @@
+declare_args() {
+  governed_arm64_gn_probe = "expected"
+}
+
+toolchain("diagnostic_toolchain") {
+  tool("stamp") {
+    command = "touch {{output}}"
+    description = "STAMP {{output}}"
+  }
+}
+
+group("diagnostic") {
+}

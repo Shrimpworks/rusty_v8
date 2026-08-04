@@ -51,6 +51,9 @@ def main():
     sysroot_link_blocker = json.loads(
         (GOV / "arm64-clean-build-blocker-sysroot-link.json").read_text()
     )
+    evidence_collection_blocker = json.loads(
+        (GOV / "arm64-clean-build-blocker-evidence-collection.json").read_text()
+    )
 
     baseline = source["upstream"]
     if git("rev-parse", f'{baseline["commit"]}^{{tree}}') != baseline["tree"]:
@@ -183,6 +186,41 @@ def main():
         "/usr/aarch64-linux-gnu/lib/libc_nonshared.a",
     ]:
         fail("sysroot-link blocker does not retain the exact absolute-path diagnostic")
+    if evidence_collection_blocker.get("governedForkCommit") != "343d1590df1615fb269036b23e3ca6f6aff81284":
+        fail("evidence-collection blocker is not bound to the exact working ARM64 build head")
+    evidence_execution = evidence_collection_blocker.get("execution", {})
+    if evidence_execution.get("runId") != 30911205915 or evidence_execution.get("jobId") != 91998224324:
+        fail("evidence-collection blocker is not bound to the exact failed run/job")
+    evidence_stages = evidence_collection_blocker.get("observedStages", {})
+    if not all(
+        evidence_stages.get(key) == 0
+        for key in (
+            "arm64LinkProbeExitStatus",
+            "arm64LinkProbeReadelfExitStatus",
+            "arm64LinkProbeQemuExitStatus",
+            "cargoBuildExitStatus",
+            "fixedTestCompileExitStatus",
+            "fixedTestReadelfExitStatus",
+            "fixedTestQemuExitStatus",
+        )
+    ):
+        fail("evidence-collection blocker does not retain all passing ARM64 build/test stages")
+    if evidence_stages.get("fixedTestMachine") != "AArch64" or evidence_stages.get("fixedGetVersionPassed") is not True:
+        fail("evidence-collection blocker does not retain the AArch64 get_version success")
+    evidence_failure = evidence_collection_blocker.get("failure", {})
+    expected_failed_command = [
+        "/workspace/.governed-cache-arm64/gn/gn",
+        "args",
+        "/workspace/target/governed-v150.2.0-linux-arm64/aarch64-unknown-linux-gnu/release/gn_out",
+        "--list",
+    ]
+    if evidence_failure.get("phase") != "evidence-collection" or evidence_failure.get("command") != expected_failed_command:
+        fail("evidence-collection blocker does not retain the exact failed GN command")
+    evidence_artifact = evidence_collection_blocker.get("boundedArtifact", {})
+    if evidence_artifact.get("sha256") != "214632058b5c02d9c371cefc610fe58d73458221efc718d89096f7148c89b5a7" or evidence_artifact.get(
+        "internalChecksumsVerified"
+    ) is not True:
+        fail("evidence-collection blocker artifact identity is not retained and verified")
 
     artifacts = [builder["clang"], builder["cargo"]["targetStandardLibrary"], builder["v8RustToolchain"]]
     artifacts.extend(builder["llvm19Bindgen"]["packages"])

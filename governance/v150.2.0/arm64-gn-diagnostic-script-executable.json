@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "profile": "linux-arm64-release-simdutf-v1",
+  "status": "passed-diagnostic",
+  "claim": "A short network-disabled pinned-GN probe reproduced the evidence failure when GN used its unavailable default 'python' interpreter and passed when the exact build.rs --script-executable=python3 setting was supplied.",
+  "governedForkCommit": "e21917350e48cc920c9ed1984e671a6bb2113df0",
+  "execution": {
+    "runId": 30924526706,
+    "jobId": 92043386254,
+    "networkMode": "none",
+    "fullArm64BuildRan": false,
+    "buildPlatform": "linux/amd64",
+    "independentBuilder": false
+  },
+  "observedStatuses": {
+    "withoutScriptExecutable": 1,
+    "withoutScriptExecutableOptionFirst": 1,
+    "withScriptExecutable": 0,
+    "withScriptExecutableOptionFirst": 0
+  },
+  "diagnosis": {
+    "defaultInterpreter": "python",
+    "defaultInterpreterExitStatus": 127,
+    "provedInterpreter": "python3",
+    "matchingBuildRsSetting": "--script-executable=python3",
+    "collectorChangedInDiagnosticHead": false
+  },
+  "boundedArtifact": {
+    "id": 8898513341,
+    "name": "rusty-v8-v150.2.0-linux-arm64-gn-diagnostic-30924526706",
+    "compressedSizeBytes": 5327,
+    "uncompressedSizeBytes": 8081,
+    "sha256": "2e28bf01bd66c24ba00b7cfc9c7bd14984a255e48be3cac0de9e4caa64a0f19c",
+    "internalChecksumsVerified": true
+  },
+  "claims": {
+    "unsigned": true,
+    "published": false,
+    "admitted": false,
+    "released": false,
+    "signed": false,
+    "runtimeWired": false
+  },
+  "nextBoundary": "Add the proved --script-executable=python3 setting to the collector's existing GN args query, retain bounded GN stderr on future failure, rerun this short diagnostic on the corrected exact head, and only then dispatch one clean network-disabled full ARM64 build."
+}

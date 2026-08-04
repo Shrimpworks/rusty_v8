@@ -57,6 +57,9 @@ def main():
     gn_ordering_diagnostic = json.loads(
         (GOV / "arm64-gn-diagnostic-ordering.json").read_text()
     )
+    gn_script_diagnostic = json.loads(
+        (GOV / "arm64-gn-diagnostic-script-executable.json").read_text()
+    )
 
     baseline = source["upstream"]
     if git("rev-parse", f'{baseline["commit"]}^{{tree}}') != baseline["tree"]:
@@ -239,6 +242,33 @@ def main():
         "internalChecksumsVerified"
     ) is not True:
         fail("GN ordering diagnostic artifact identity is not retained and verified")
+    if gn_script_diagnostic.get("governedForkCommit") != "e21917350e48cc920c9ed1984e671a6bb2113df0":
+        fail("GN script-executable diagnostic is not bound to its exact head")
+    gn_script_execution = gn_script_diagnostic.get("execution", {})
+    if gn_script_execution.get("runId") != 30924526706 or gn_script_execution.get("jobId") != 92043386254:
+        fail("GN script-executable diagnostic is not bound to its exact run/job")
+    expected_script_statuses = {
+        "withoutScriptExecutable": 1,
+        "withoutScriptExecutableOptionFirst": 1,
+        "withScriptExecutable": 0,
+        "withScriptExecutableOptionFirst": 0,
+    }
+    if gn_script_diagnostic.get("observedStatuses") != expected_script_statuses:
+        fail("GN script-executable diagnostic does not retain the proved status matrix")
+    gn_script_diagnosis = gn_script_diagnostic.get("diagnosis", {})
+    if gn_script_diagnosis.get("defaultInterpreterExitStatus") != 127 or gn_script_diagnosis.get(
+        "matchingBuildRsSetting"
+    ) != "--script-executable=python3":
+        fail("GN script-executable diagnostic does not retain the exact interpreter diagnosis")
+    gn_script_artifact = gn_script_diagnostic.get("boundedArtifact", {})
+    if gn_script_artifact.get("sha256") != "2e28bf01bd66c24ba00b7cfc9c7bd14984a255e48be3cac0de9e4caa64a0f19c" or gn_script_artifact.get(
+        "internalChecksumsVerified"
+    ) is not True:
+        fail("GN script-executable diagnostic artifact identity is not retained and verified")
+    collector = (ROOT / "scripts/governed/collect_arm64_evidence.py").read_text()
+    expected_gn_query = '[str(gn), "--script-executable=python3", "args", str(GN_OUT), "--list"]'
+    if expected_gn_query not in collector:
+        fail("ARM64 collector does not use the GN script interpreter proved by the short diagnostic")
 
     artifacts = [builder["clang"], builder["cargo"]["targetStandardLibrary"], builder["v8RustToolchain"]]
     artifacts.extend(builder["llvm19Bindgen"]["packages"])

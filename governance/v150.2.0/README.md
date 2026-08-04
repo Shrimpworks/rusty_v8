@@ -357,9 +357,22 @@ difference: `build.rs` successfully queries the generated GN output with
 `--script-executable=python3`, while the evidence collector omits GN's script
 interpreter setting. The short fixture now executes a benign fixed Python
 script during GN evaluation, generates with that interpreter explicitly, and
-compares queries with and without the setting. The collector remains unchanged
-until this revised network-disabled probe proves the difference. A full ARM64
-rerun remains gated; LLVM, V8 source, packages, digests, networking, caches, and
+compares queries with and without the setting.
+
+The revised diagnostic passed at exact head
+`e21917350e48cc920c9ed1984e671a6bb2113df0` in run `30924526706`, job
+`92043386254`. Both queries without the script setting failed status 1 because
+GN invoked unavailable `python` and the benign script returned 127; both
+queries with `--script-executable=python3` passed status zero. Its internally
+verified 8,081-byte evidence has GitHub SHA-256
+`2e28bf01bd66c24ba00b7cfc9c7bd14984a255e48be3cac0de9e4caa64a0f19c` and is
+retained as `arm64-gn-diagnostic-script-executable.json`. No ARM64 or V8 build
+ran.
+
+The collector now supplies precisely that proved setting, matching `build.rs`,
+and emits the combined bounded GN diagnostic output if the command ever fails
+again. The same short diagnostic must pass on the corrected exact head before a
+full ARM64 rerun. LLVM, V8 source, packages, digests, networking, caches, and
 the existing amd64 contract are unchanged.
 
 ## Ownership and update policy

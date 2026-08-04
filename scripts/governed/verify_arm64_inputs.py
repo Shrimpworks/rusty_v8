@@ -45,6 +45,9 @@ def main():
     verification_blocker = json.loads(
         (GOV / "arm64-clean-build-blocker-verification.json").read_text()
     )
+    linker_runtime_blocker = json.loads(
+        (GOV / "arm64-clean-build-blocker-linker-runtime.json").read_text()
+    )
 
     baseline = source["upstream"]
     if git("rev-parse", f'{baseline["commit"]}^{{tree}}') != baseline["tree"]:
@@ -120,6 +123,11 @@ def main():
         "/workspace/.governed-cache-arm64/llvm19/usr/lib/llvm-19/lib/clang/19"
     ):
         fail("unexpected arm64 bindgen resource directory")
+    if environment["LD_LIBRARY_PATH"] != (
+        "/workspace/.governed-cache-arm64/llvm19/usr/lib/x86_64-linux-gnu:"
+        "/workspace/.governed-cache-arm64/cross/usr/lib/x86_64-linux-gnu"
+    ):
+        fail("unexpected host library path for bindgen and the pinned cross linker")
     for key in ("rustcCommit", "cargoCommit"):
         if not re.fullmatch(r"[0-9a-f]{40}", builder["cargo"][key]):
             fail(f"invalid {key}")
@@ -133,6 +141,16 @@ def main():
     failure = verification_blocker.get("failure", {})
     if failure.get("phase") != "fixed-get-version-verification" or failure.get("diagnosticRetained") is not False:
         fail("post-build verification blocker does not retain the diagnostic gap")
+    if linker_runtime_blocker.get("governedForkCommit") != "31e7bd74d7bdca699be175c7f598eeaa1383ff1e":
+        fail("linker runtime blocker is not bound to the exact diagnostic head")
+    linker_execution = linker_runtime_blocker.get("execution", {})
+    if linker_execution.get("runId") != 30867826822 or linker_execution.get("jobId") != 91863398357:
+        fail("linker runtime blocker is not bound to the exact failed run/job")
+    linker_failure = linker_runtime_blocker.get("failure", {})
+    if linker_failure.get("phase") != "fixed-test-compile" or "libbfd-2.40-arm64.so" not in linker_failure.get(
+        "diagnostic", ""
+    ):
+        fail("linker runtime blocker does not retain the exact missing library diagnostic")
 
     artifacts = [builder["clang"], builder["cargo"]["targetStandardLibrary"], builder["v8RustToolchain"]]
     artifacts.extend(builder["llvm19Bindgen"]["packages"])

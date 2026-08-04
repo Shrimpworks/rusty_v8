@@ -48,6 +48,7 @@ jobs:
           python3 -m json.tool governance/v150.2.0/arm64-clean-build-blocker-bindgen.json >/dev/null
           python3 -m json.tool governance/v150.2.0/arm64-clean-build-blocker-gn-bindgen.json >/dev/null
           python3 -m json.tool governance/v150.2.0/arm64-clean-build-blocker-verification.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/arm64-clean-build-blocker-linker-runtime.json >/dev/null
           python3 scripts/governed/verify_arm64_inputs.py
           git diff --check d305e6afa7736f6e298c30ae6646f7709ee9382b...HEAD
 

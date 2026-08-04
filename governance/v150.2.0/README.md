@@ -262,6 +262,30 @@ LLVM, source, package, digest, object-cache, output-cap, or networking change is
 made by this diagnostic correction. Full arm64 success remains unclaimed until
 one new clean attempt completes every stage.
 
+That diagnostic attempt ran at exact fork head
+`31e7bd74d7bdca699be175c7f598eeaa1383ff1e` in GitHub Actions run
+`30867826822`, job `91863398357`, and is retained as
+`arm64-clean-build-blocker-linker-runtime.json`. Digest-pinned prefetch and the
+empty-cache, network-disabled Cargo release build completed; the latter took 81
+minutes 18 seconds and again completed V8 compilation and final rusty_v8
+bindgen. The separated `cargo test --no-run` stage reached the final link, where
+the pinned cross-linker's own loader exited 127 because its host-side
+`libbfd-2.40-arm64.so` was absent. The stage returned Cargo status 101. No test
+binary existed, so readelf, QEMU, evidence collection, bundle verification, and
+the full-bundle upload correctly did not run. The sole bounded blocker artifact
+verified internally and has GitHub SHA-256
+`e08b662b1a5f582fb48ee2c04bb3821cc8830971b65c029532caadebd3a2008f`.
+
+Independent inspection of the already declared
+`binutils-aarch64-linux-gnu=2.40-2` archive at its locked SHA-256 confirms that
+it already contains `usr/lib/x86_64-linux-gnu/libbfd-2.40-arm64.so`. No new
+package is needed. Prefetch now refuses a closure without that exact library,
+and the offline build exposes only the existing extracted cross-linker host
+library directory in addition to the existing LLVM bindgen directory. This
+correction does not change any input digest, LLVM, source, target sysroot,
+networking, object-cache policy, or output cap. ARM64 success remains unclaimed
+pending a new clean run.
+
 ## Ownership and update policy
 
 - Owner: `dills122/rusty_v8` maintainers; Capsule runtime/supply-chain reviewers

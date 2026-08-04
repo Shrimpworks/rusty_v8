@@ -148,7 +148,7 @@
     "RUST_TOOLCHAIN": "/workspace/.governed-cache-arm64/rust-toolchain",
     "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER": "/workspace/.governed-cache-arm64/cross/usr/bin/aarch64-linux-gnu-gcc-12",
     "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER": "/workspace/.governed-cache-arm64/cross/usr/bin/qemu-aarch64-static -L /workspace/.governed-cache-arm64/cross/usr/aarch64-linux-gnu",
-    "LD_LIBRARY_PATH": "/workspace/.governed-cache-arm64/llvm19/usr/lib/x86_64-linux-gnu",
+    "LD_LIBRARY_PATH": "/workspace/.governed-cache-arm64/llvm19/usr/lib/x86_64-linux-gnu:/workspace/.governed-cache-arm64/cross/usr/lib/x86_64-linux-gnu",
     "RUSTY_V8_BINDGEN_RESOURCE_DIR": "/workspace/.governed-cache-arm64/llvm19/usr/lib/llvm-19/lib/clang/19",
     "RUSTY_V8_GLIBC_SYSROOT": "/workspace/.governed-cache-arm64/cross/usr/aarch64-linux-gnu"
   },

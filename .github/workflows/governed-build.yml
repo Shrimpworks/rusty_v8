@@ -38,6 +38,7 @@ jobs:
       - name: Verify scripts and JSON
         run: |
           python3 -m py_compile scripts/governed/*.py
+          for script in scripts/governed/*.sh; do sh -n "$script"; done
           python3 -m json.tool governance/v150.2.0/builder.lock.json >/dev/null
           python3 -m json.tool governance/v150.2.0/source.lock.json >/dev/null
           python3 -m json.tool governance/v150.2.0/retained-pr56-evidence.json >/dev/null

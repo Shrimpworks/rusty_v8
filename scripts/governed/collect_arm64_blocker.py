@@ -49,6 +49,9 @@ def main():
     output.mkdir(parents=True)
 
     logs = {
+        "arm64-link-probe.tail.log": TARGET / "arm64-link-probe.log",
+        "arm64-link-probe-readelf.tail.log": TARGET / "arm64-link-probe-readelf.log",
+        "arm64-link-probe-qemu.tail.log": TARGET / "arm64-link-probe-qemu.log",
         "governed-build.tail.log": TARGET / "governed-build.log",
         "fixed-test-compile.tail.log": TARGET / "fixed-test-compile.log",
         "fixed-test-readelf.tail.log": TARGET / "fixed-test-readelf.log",

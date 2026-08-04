@@ -310,6 +310,18 @@ with `--sysroot=/workspace/.governed-cache-arm64/cross`, retain explicit checks
 for all three files, and rerun one clean network-disabled ARM64 build. This is
 not an LLVM, V8, source, package, digest, networking, or object-cache change.
 
+The correction routes Cargo's ARM64 link commands through a governed wrapper
+that invokes the existing pinned `aarch64-linux-gnu-gcc-12` with
+`--sysroot=/workspace/.governed-cache-arm64/cross`. Prefetch and the decisive
+build both refuse a closure missing any of the three glibc linker-script
+members. Before the long V8 compile, the network-disabled container compiles a
+fixed benign C program, verifies its AArch64 ELF identity with the pinned
+cross-`readelf`, and executes it with the pinned QEMU/sysroot pair. These early
+stages retain bounded logs on failure and do not replace the final fixed
+`get_version` test. No package, digest, LLVM, V8 source, Rust toolchain, target
+sysroot contents, networking, cache, or output cap is changed. Full ARM64
+success remains unclaimed until every final stage and bundle verification pass.
+
 ## Ownership and update policy
 
 - Owner: `dills122/rusty_v8` maintainers; Capsule runtime/supply-chain reviewers

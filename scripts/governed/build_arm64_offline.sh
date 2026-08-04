@@ -13,7 +13,8 @@ cross="$cache/cross"
 libclang="$cache/llvm19/usr/lib/llvm-19/lib"
 llvm19_lib="$cache/llvm19/usr/lib/x86_64-linux-gnu"
 cross_host_lib="$cross/usr/lib/x86_64-linux-gnu"
-linker="$cross/usr/bin/aarch64-linux-gnu-gcc-12"
+cross_linker="$cross/usr/bin/aarch64-linux-gnu-gcc-12"
+linker="$root/scripts/governed/link_arm64.sh"
 runner="$cross/usr/bin/qemu-aarch64-static"
 target_root="$cross/usr/aarch64-linux-gnu"
 target_include="$target_root/include"
@@ -38,10 +39,13 @@ test -x "$ninja"
 test -x "$cache/clang/bin/clang"
 test -x "$rust_toolchain/bin/rustc"
 test -x "$rust_toolchain/bin/cargo"
+test -x "$cross_linker"
 test -x "$linker"
 test -x "$runner"
 test -x "$cross/usr/bin/aarch64-linux-gnu-readelf"
 test -e "$target_root/lib/ld-linux-aarch64.so.1"
+test -f "$target_root/lib/libc.so.6"
+test -f "$target_root/lib/libc_nonshared.a"
 test -f "$target_include/features.h"
 test -f "$target_include/features-time64.h"
 test -f "$target_include/bits/wordsize.h"
@@ -130,6 +134,38 @@ identify_test_binary() {
   "$readelf" -h "$test_binary"
   "$readelf" -h "$test_binary" | grep -Eq 'Machine:[[:space:]]+AArch64'
 }
+
+identify_link_probe() {
+  "$readelf" -h "$link_probe"
+  "$readelf" -h "$link_probe" | grep -Eq 'Machine:[[:space:]]+AArch64'
+}
+
+link_probe="$target/arm64-link-probe"
+link_probe_log="$target/arm64-link-probe.log"
+if run_stage arm64-link-probe "$link_probe_log" \
+  "$linker" scripts/governed/arm64_link_probe.c -o "$link_probe"; then
+  :
+else
+  status=$?
+  retain_failure arm64-link-probe "$status"
+fi
+
+link_probe_readelf_log="$target/arm64-link-probe-readelf.log"
+if run_stage arm64-link-probe-readelf "$link_probe_readelf_log" identify_link_probe; then
+  :
+else
+  status=$?
+  retain_failure arm64-link-probe-readelf "$status"
+fi
+
+link_probe_qemu_log="$target/arm64-link-probe-qemu.log"
+if run_stage arm64-link-probe-qemu "$link_probe_qemu_log" \
+  "$runner" -L "$target_root" "$link_probe"; then
+  :
+else
+  status=$?
+  retain_failure arm64-link-probe-qemu "$status"
+fi
 
 if run_stage cargo-build "$build_log" \
   "$rust_toolchain/bin/cargo" build --frozen --release \

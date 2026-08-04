@@ -115,6 +115,19 @@ def main():
         fail("unexpected Rust toolchain or target")
     if builder["cargo"]["hostToolchainPath"] != "/usr/local/rustup/toolchains/1.91.0-x86_64-unknown-linux-gnu":
         fail("unexpected builder-image Rust toolchain path")
+    cross_toolchain = builder["crossToolchain"]
+    if cross_toolchain.get("linkerWrapper") != "scripts/governed/link_arm64.sh" or cross_toolchain.get(
+        "linkerSysroot"
+    ) != "/workspace/.governed-cache-arm64/cross":
+        fail("unexpected ARM64 linker wrapper or extracted sysroot")
+    for path_key, digest_key in (
+        ("linkerWrapper", "linkerWrapperSha256"),
+        ("linkProbeSource", "linkProbeSourceSha256"),
+    ):
+        path = ROOT / cross_toolchain[path_key]
+        require_digest(cross_toolchain[digest_key], digest_key)
+        if sha256(path) != cross_toolchain[digest_key]:
+            fail(f"{path_key} differs from its governed digest")
     environment = builder["environment"]
     if "BINDGEN_EXTRA_CLANG_ARGS" in environment:
         fail("global bindgen arguments would leak into Chromium host tools")
@@ -126,6 +139,10 @@ def main():
         "/workspace/.governed-cache-arm64/llvm19/usr/lib/llvm-19/lib/clang/19"
     ):
         fail("unexpected arm64 bindgen resource directory")
+    if environment["CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER"] != (
+        "/workspace/scripts/governed/link_arm64.sh"
+    ):
+        fail("Cargo must use the governed ARM64 sysroot linker wrapper")
     if environment["LD_LIBRARY_PATH"] != (
         "/workspace/.governed-cache-arm64/llvm19/usr/lib/x86_64-linux-gnu:"
         "/workspace/.governed-cache-arm64/cross/usr/lib/x86_64-linux-gnu"

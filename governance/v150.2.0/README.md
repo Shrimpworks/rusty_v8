@@ -286,6 +286,30 @@ correction does not change any input digest, LLVM, source, target sysroot,
 networking, object-cache policy, or output cap. ARM64 success remains unclaimed
 pending a new clean run.
 
+That new run used exact fork head
+`9c9181dd09da445294462b43b69f0b37240f0e9b` in GitHub Actions run
+`30873208247`, job `91879247103`, and is retained as
+`arm64-clean-build-blocker-sysroot-link.json`. Contract verification and
+digest-pinned prefetch passed. The empty-cache, network-disabled Cargo release
+build completed in 77 minutes 42 seconds, and the fixed-test compile reached
+the final ARM64 link. This confirms the cross linker's host runtime-path fix.
+The linker then exited 1 because the pinned glibc `libc.so` linker script names
+`/usr/aarch64-linux-gnu/lib/libc.so.6`, `libc_nonshared.a`, and
+`ld-linux-aarch64.so.1` as absolute paths, while the governed Debian closure is
+extracted beneath `/workspace/.governed-cache-arm64/cross`. Cargo returned 101.
+No test binary existed, so readelf, QEMU, evidence collection, bundle
+verification, and full-bundle upload correctly did not run.
+
+The sole bounded blocker artifact verified internally and has GitHub SHA-256
+`fbc73421f1b3f4eb544124c4ffe02314e4bc8e58db7da702c23b78a2e9c82159`.
+Independent inspection of the exact locked `libc6-arm64-cross` and
+`libc6-dev-arm64-cross` bytes confirms both the absolute linker-script entries
+and all three referenced files beneath the extracted closure. No package is
+missing. The next exact boundary is to supply the already pinned GCC linker
+with `--sysroot=/workspace/.governed-cache-arm64/cross`, retain explicit checks
+for all three files, and rerun one clean network-disabled ARM64 build. This is
+not an LLVM, V8, source, package, digest, networking, or object-cache change.
+
 ## Ownership and update policy
 
 - Owner: `dills122/rusty_v8` maintainers; Capsule runtime/supply-chain reviewers

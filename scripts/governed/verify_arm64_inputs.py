@@ -48,6 +48,9 @@ def main():
     linker_runtime_blocker = json.loads(
         (GOV / "arm64-clean-build-blocker-linker-runtime.json").read_text()
     )
+    sysroot_link_blocker = json.loads(
+        (GOV / "arm64-clean-build-blocker-sysroot-link.json").read_text()
+    )
 
     baseline = source["upstream"]
     if git("rev-parse", f'{baseline["commit"]}^{{tree}}') != baseline["tree"]:
@@ -151,6 +154,18 @@ def main():
         "diagnostic", ""
     ):
         fail("linker runtime blocker does not retain the exact missing library diagnostic")
+    if sysroot_link_blocker.get("governedForkCommit") != "9c9181dd09da445294462b43b69f0b37240f0e9b":
+        fail("sysroot-link blocker is not bound to the exact corrected head")
+    sysroot_execution = sysroot_link_blocker.get("execution", {})
+    if sysroot_execution.get("runId") != 30873208247 or sysroot_execution.get("jobId") != 91879247103:
+        fail("sysroot-link blocker is not bound to the exact failed run/job")
+    sysroot_failure = sysroot_link_blocker.get("failure", {})
+    if sysroot_failure.get("phase") != "fixed-test-compile" or sysroot_failure.get("missingAbsolutePaths") != [
+        "/usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1",
+        "/usr/aarch64-linux-gnu/lib/libc.so.6",
+        "/usr/aarch64-linux-gnu/lib/libc_nonshared.a",
+    ]:
+        fail("sysroot-link blocker does not retain the exact absolute-path diagnostic")
 
     artifacts = [builder["clang"], builder["cargo"]["targetStandardLibrary"], builder["v8RustToolchain"]]
     artifacts.extend(builder["llvm19Bindgen"]["packages"])

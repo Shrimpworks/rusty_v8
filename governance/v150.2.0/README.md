@@ -239,8 +239,28 @@ The next correction removes global bindgen state. The final rusty_v8 binding
 builder alone reads the governed glibc sysroot and libclang resource-directory
 variables; Chromium's generated host and target bindgen actions remain
 unchanged. No package, digest, source gitlink, output cap, amd64 contract, or
-network policy changes. Full arm64 success remains unclaimed until the gated
-job completes from a new clean state.
+network policy changes.
+
+That correction was exercised at exact fork head
+`aa921fa48901bf28774d61248b0187c8b91c55a4` in GitHub Actions run
+`30859318722`, job `91837612159`, retained as
+`arm64-clean-build-blocker-verification.json`. The empty-cache,
+network-disabled Cargo release build completed in 94 minutes 37 seconds, which
+also proves the final governed bindgen correction completed. The subsequent
+fixed `get_version` Cargo command exited 101 before evidence collection. Its
+output had been redirected to the ephemeral target directory, and shell
+fail-fast handling stopped before printing or uploading it, so the exact
+compile/link/QEMU subfailure is deliberately recorded as unavailable rather
+than inferred. No verified bundle or artifact resulted.
+
+The next attempt separates test compilation, pinned cross-`readelf` AArch64
+identity, explicit pinned-QEMU execution, evidence collection, and bundle
+verification into individually logged stages. Every stage prints its exit
+status. A failure emits only a bounded diagnostic artifact; the complete
+unsigned, unpublished, unadmitted candidate bundle remains success-only. No
+LLVM, source, package, digest, object-cache, output-cap, or networking change is
+made by this diagnostic correction. Full arm64 success remains unclaimed until
+one new clean attempt completes every stage.
 
 ## Ownership and update policy
 

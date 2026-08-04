@@ -42,6 +42,9 @@ def main():
     source = json.loads((GOV / "source.lock.json").read_text())
     builder = json.loads((GOV / "builder-linux-arm64.lock.json").read_text())
     expected = json.loads((GOV / "expected-outputs-linux-arm64.json").read_text())
+    verification_blocker = json.loads(
+        (GOV / "arm64-clean-build-blocker-verification.json").read_text()
+    )
 
     baseline = source["upstream"]
     if git("rev-parse", f'{baseline["commit"]}^{{tree}}') != baseline["tree"]:
@@ -122,6 +125,14 @@ def main():
             fail(f"invalid {key}")
     if builder["claims"] != {"unsigned": True, "admitted": False, "published": False, "independentBuilder": False}:
         fail("arm64 claims must remain unsigned, unpublished, unadmitted, and non-independent")
+    if verification_blocker.get("governedForkCommit") != "aa921fa48901bf28774d61248b0187c8b91c55a4":
+        fail("post-build verification blocker is not bound to the exact failed head")
+    execution = verification_blocker.get("execution", {})
+    if execution.get("runId") != 30859318722 or execution.get("jobId") != 91837612159:
+        fail("post-build verification blocker is not bound to the exact failed run/job")
+    failure = verification_blocker.get("failure", {})
+    if failure.get("phase") != "fixed-get-version-verification" or failure.get("diagnosticRetained") is not False:
+        fail("post-build verification blocker does not retain the diagnostic gap")
 
     artifacts = [builder["clang"], builder["cargo"]["targetStandardLibrary"], builder["v8RustToolchain"]]
     artifacts.extend(builder["llvm19Bindgen"]["packages"])

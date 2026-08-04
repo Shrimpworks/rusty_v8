@@ -5,6 +5,7 @@ root=$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)
 cache="$root/.governed-cache-arm64"
 target="$root/target/governed-v150.2.0-linux-arm64"
 out="$root/governed-out/v150.2.0/linux-arm64"
+blocker_out="$root/governed-out/v150.2.0/linux-arm64-blocker"
 gn="$cache/gn/gn"
 ninja="$cache/ninja/ninja"
 rust_toolchain="$cache/rust-toolchain"
@@ -80,20 +81,107 @@ unset SCCACHE CCACHE RUSTC_WRAPPER BINDGEN_EXTRA_CLANG_ARGS
 
 python3 scripts/governed/verify_arm64_inputs.py --require-submodules
 build_log="$target/governed-build.log"
-build_status="$target/governed-build.status"
-(
-  set +e
-  "$rust_toolchain/bin/cargo" build --frozen --release --target aarch64-unknown-linux-gnu --features simdutf -j8
-  status=$?
-  printf '%s\n' "$status" > "$build_status"
-  exit 0
-) 2>&1 | tee "$build_log"
-status=$(cat "$build_status")
-rm -f "$build_status"
-if [ "$status" -ne 0 ]; then
+stage_status="$target/governed-stage.status"
+test_binary_path="$target/fixed-test-binary.path"
+readelf="$cross/usr/bin/aarch64-linux-gnu-readelf"
+
+run_stage() {
+  stage=$1
+  log=$2
+  shift 2
+  printf '::group::governed arm64 stage: %s\n' "$stage"
+  (
+    set +e
+    "$@"
+    status=$?
+    printf '%s\n' "$status" > "$stage_status"
+    exit 0
+  ) 2>&1 | tee "$log"
+  status=$(cat "$stage_status")
+  rm -f "$stage_status"
+  printf 'governed-arm64-stage=%s exit-status=%s\n' "$stage" "$status"
+  printf '::endgroup::\n'
+  return "$status"
+}
+
+retain_failure() {
+  stage=$1
+  status=$2
+  python3 scripts/governed/collect_arm64_blocker.py \
+    --phase "$stage" \
+    --exit-status "$status" \
+    --output "$blocker_out"
   exit "$status"
+}
+
+identify_test_binary() {
+  candidates="$target/fixed-test-binary-candidates.txt"
+  find "$target/aarch64-unknown-linux-gnu/release/deps" \
+    -maxdepth 1 -type f -name 'test_api-*' -perm -0100 -print | sort > "$candidates"
+  count=$(wc -l < "$candidates" | tr -d ' ')
+  printf 'candidate-count=%s\n' "$count"
+  cat "$candidates"
+  test "$count" -eq 1
+  test_binary=$(sed -n '1p' "$candidates")
+  test -n "$test_binary"
+  printf '%s\n' "$test_binary" > "$test_binary_path"
+  "$readelf" -h "$test_binary"
+  "$readelf" -h "$test_binary" | grep -Eq 'Machine:[[:space:]]+AArch64'
+}
+
+if run_stage cargo-build "$build_log" \
+  "$rust_toolchain/bin/cargo" build --frozen --release \
+  --target aarch64-unknown-linux-gnu --features simdutf -j8; then
+  :
+else
+  status=$?
+  retain_failure cargo-build "$status"
 fi
-"$rust_toolchain/bin/cargo" test --frozen --release --target aarch64-unknown-linux-gnu --features simdutf --test test_api get_version -- --exact > "$target/fixed-verification.txt" 2>&1
-cat "$target/fixed-verification.txt"
-python3 scripts/governed/collect_arm64_evidence.py
-python3 scripts/governed/verify_arm64_release.py governed-out/v150.2.0/linux-arm64
+
+test_compile_log="$target/fixed-test-compile.log"
+if run_stage fixed-test-compile "$test_compile_log" \
+  "$rust_toolchain/bin/cargo" test --frozen --release \
+  --target aarch64-unknown-linux-gnu --features simdutf \
+  --test test_api --no-run -j8; then
+  :
+else
+  status=$?
+  retain_failure fixed-test-compile "$status"
+fi
+
+test_readelf_log="$target/fixed-test-readelf.log"
+if run_stage fixed-test-readelf "$test_readelf_log" identify_test_binary; then
+  :
+else
+  status=$?
+  retain_failure fixed-test-readelf "$status"
+fi
+
+test_binary=$(cat "$test_binary_path")
+verification="$target/fixed-verification.txt"
+if run_stage fixed-test-qemu "$verification" \
+  "$runner" -L "$target_root" "$test_binary" get_version --exact; then
+  :
+else
+  status=$?
+  retain_failure fixed-test-qemu "$status"
+fi
+
+collection_log="$target/evidence-collection.log"
+if run_stage evidence-collection "$collection_log" \
+  python3 scripts/governed/collect_arm64_evidence.py; then
+  :
+else
+  status=$?
+  retain_failure evidence-collection "$status"
+fi
+
+bundle_log="$target/bundle-verification.log"
+if run_stage bundle-verification "$bundle_log" \
+  python3 scripts/governed/verify_arm64_release.py \
+  governed-out/v150.2.0/linux-arm64; then
+  :
+else
+  status=$?
+  retain_failure bundle-verification "$status"
+fi

@@ -1,0 +1,4 @@
+probe_result = exec_script("//probe.py", [], "trim string")
+assert(probe_result == "expected")
+
+set_default_toolchain("//:diagnostic_toolchain")

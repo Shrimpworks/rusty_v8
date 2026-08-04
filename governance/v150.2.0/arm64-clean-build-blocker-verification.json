@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "claim": "arm64-build-complete-but-no-fixed-test-no-verified-bundle-no-publication-no-admission",
+  "governedForkCommit": "aa921fa48901bf28774d61248b0187c8b91c55a4",
+  "governedBaselineMergeCommit": "eddede228a9214c4dfb6a85aeca22abc0679100d",
+  "profile": "linux-arm64-release-simdutf-v1",
+  "builderImage": "docker.io/library/rust@sha256:307d198027388f780db83929487de35084a73ecbaa31319989438db38103439f",
+  "execution": {
+    "provider": "GitHub Actions",
+    "runId": 30859318722,
+    "jobId": 91837612159,
+    "runUrl": "https://github.com/dills122/rusty_v8/actions/runs/30859318722",
+    "jobUrl": "https://github.com/dills122/rusty_v8/actions/runs/30859318722/job/91837612159",
+    "runner": "ubuntu-24.04",
+    "startedAt": "2026-08-03T22:37:08Z",
+    "completedAt": "2026-08-04T00:18:30Z",
+    "conclusion": "failure",
+    "uploadedArtifactCount": 0
+  },
+  "prefetch": {
+    "completed": true,
+    "cargoArchiveCount": 263,
+    "startedAt": "2026-08-03T22:40:39Z",
+    "completedAt": "2026-08-03T22:42:52Z"
+  },
+  "cleanBuild": {
+    "networkMode": "none",
+    "targetDirectoryExisted": false,
+    "outputDirectoryExisted": false,
+    "sccachePresent": false,
+    "ccachePresent": false,
+    "startedAt": "2026-08-03T22:42:52Z",
+    "cargoCompletedAt": "2026-08-04T00:17:30Z",
+    "cargoDurationSeconds": 5677
+  },
+  "observedProgress": {
+    "cargoReleaseBuildCompleted": true,
+    "v8ArchiveProduced": true,
+    "bindgenCompleted": true,
+    "fixedVerificationCommandCompleted": false,
+    "getVersionTestResultKnown": false,
+    "bundleProduced": false,
+    "bundleVerified": false
+  },
+  "failure": {
+    "phase": "fixed-get-version-verification",
+    "exitStatus": 101,
+    "diagnosticRetained": false,
+    "message": "The fixed Cargo verification command exited 101 after the complete release build, but its stdout and stderr were redirected to the ephemeral target directory and fail-fast shell handling stopped before printing them.",
+    "diagnostic": "GitHub Actions retained only 'Finished release profile [optimized] target(s) in 94m 37s' followed by 'Process completed with exit code 101'. The command may have failed during test compilation, linking, QEMU loading, or test execution; the retained evidence does not distinguish those phases."
+  },
+  "failClosedAction": {
+    "mutablePackageInstall": false,
+    "networkEnabledForBuild": false,
+    "amd64Substitution": false,
+    "objectCacheReuse": false,
+    "fullBundleUpload": false,
+    "blockerArtifactUpload": false,
+    "automaticRetry": false
+  },
+  "nextBoundary": "Split the fixed verification into logged cargo test --no-run, pinned readelf AArch64 identity, and explicit pinned-QEMU execution stages; retain bounded diagnostics on any failure; then run one new empty-cache, network-disabled exact-head attempt before applying any toolchain or runtime correction."
+}

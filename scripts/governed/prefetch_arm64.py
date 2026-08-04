@@ -160,7 +160,13 @@ def install_cross_toolchain(downloads):
         cross / "usr/bin/aarch64-linux-gnu-g++-12",
         cross / "usr/bin/aarch64-linux-gnu-readelf",
         cross / "usr/bin/qemu-aarch64-static",
+        cross / "usr/lib/x86_64-linux-gnu/libbfd-2.40-arm64.so",
         cross / "usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1",
+        cross / "usr/aarch64-linux-gnu/lib/libc.so.6",
+        cross / "usr/aarch64-linux-gnu/lib/libc_nonshared.a",
+        cross / "usr/aarch64-linux-gnu/include/features.h",
+        cross / "usr/aarch64-linux-gnu/include/features-time64.h",
+        cross / "usr/aarch64-linux-gnu/include/bits/wordsize.h",
     ]
     for path in required:
         if not path.exists():

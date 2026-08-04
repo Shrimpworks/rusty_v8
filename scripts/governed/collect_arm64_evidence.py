@@ -7,6 +7,7 @@ import pathlib
 import re
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 import tomllib
@@ -23,6 +24,21 @@ EPOCH = 1784209467
 
 def run(args, cwd=ROOT):
     return subprocess.check_output(args, cwd=cwd, text=True)
+
+
+def run_with_diagnostics(args, cwd=ROOT):
+    completed = subprocess.run(
+        args,
+        cwd=cwd,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    if completed.returncode != 0:
+        print(completed.stdout, end="", file=sys.stderr)
+        completed.check_returncode()
+    return completed.stdout
 
 
 def sha(path):
@@ -195,7 +211,11 @@ def main():
         (metadata / "ninja-graph.dot").write_text(run([str(ninja), "-C", str(GN_OUT), "-t", "graph", "rusty_v8"]))
         (metadata / "ninja-deps.txt").write_text(run([str(ninja), "-C", str(GN_OUT), "-t", "deps", "rusty_v8"]))
         (metadata / "ninja-commands.txt").write_text(run([str(ninja), "-C", str(GN_OUT), "-t", "commands", "rusty_v8"]))
-        (metadata / "gn-args-list.txt").write_text(run([str(gn), "args", str(GN_OUT), "--list"]))
+        (metadata / "gn-args-list.txt").write_text(
+            run_with_diagnostics(
+                [str(gn), "--script-executable=python3", "args", str(GN_OUT), "--list"]
+            )
+        )
         project = json.loads((GN_OUT / "project.json").read_text())
         target_label = "//:rusty_v8"
         if target_label not in project["targets"]:

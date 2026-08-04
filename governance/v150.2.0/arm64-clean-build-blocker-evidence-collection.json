@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "profile": "linux-arm64-release-simdutf-v1",
+  "status": "retained-blocker",
+  "claim": "The clean network-disabled ARM64 build, final bindgen, fixed-test compilation, AArch64 identity check, and pinned-QEMU get_version test all passed; only post-build GN evidence collection failed before bundle verification.",
+  "governedForkCommit": "343d1590df1615fb269036b23e3ca6f6aff81284",
+  "execution": {
+    "runId": 30911205915,
+    "jobId": 91998224324,
+    "networkMode": "none",
+    "targetDirectoryExisted": false,
+    "outputDirectoryExisted": false,
+    "compilerObjectCachePresent": false,
+    "buildPlatform": "linux/amd64",
+    "targetPlatform": "linux/arm64",
+    "independentBuilder": false
+  },
+  "observedStages": {
+    "arm64LinkProbeExitStatus": 0,
+    "arm64LinkProbeReadelfExitStatus": 0,
+    "arm64LinkProbeQemuExitStatus": 0,
+    "cargoBuildExitStatus": 0,
+    "cargoBuildDurationSeconds": 6517,
+    "fixedTestCompileExitStatus": 0,
+    "fixedTestReadelfExitStatus": 0,
+    "fixedTestMachine": "AArch64",
+    "fixedTestQemuExitStatus": 0,
+    "fixedGetVersionPassed": true,
+    "evidenceCollectionExitStatus": 1,
+    "bundleVerificationRan": false
+  },
+  "failure": {
+    "phase": "evidence-collection",
+    "command": [
+      "/workspace/.governed-cache-arm64/gn/gn",
+      "args",
+      "/workspace/target/governed-v150.2.0-linux-arm64/aarch64-unknown-linux-gnu/release/gn_out",
+      "--list"
+    ],
+    "exitStatus": 1,
+    "collector": "scripts/governed/collect_arm64_evidence.py",
+    "collectorLine": 198,
+    "llvmChanged": false
+  },
+  "boundedArtifact": {
+    "id": 8897106273,
+    "name": "rusty-v8-v150.2.0-linux-arm64-blocker-30911205915",
+    "compressedSizeBytes": 21252,
+    "uncompressedSizeBytes": 53591,
+    "sha256": "214632058b5c02d9c371cefc610fe58d73458221efc718d89096f7148c89b5a7",
+    "internalChecksumsVerified": true,
+    "fullBundleUploaded": false
+  },
+  "claims": {
+    "unsigned": true,
+    "published": false,
+    "admitted": false,
+    "released": false,
+    "signed": false,
+    "runtimeWired": false,
+    "workingArm64Build": true,
+    "successfulArm64Bundle": false
+  },
+  "nextBoundary": "Run the dedicated network-disabled pinned-GN diagnostic against a fixed minimal project to compare the exact failed absolute-path invocation with option-first and relative-path variants. Apply only the variant proved by that short gate; only after the gate passes may one new empty-cache, network-disabled full ARM64 build be dispatched for evidence collection and bundle verification."
+}

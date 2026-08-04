@@ -164,6 +164,11 @@ unadmitted bundle under `governed-out/v150.2.0/linux-arm64/`:
 and a 2 GiB total cap. Exceeding a cap is a verification failure; caps are not
 raised during a build to make an output pass.
 
+The GitHub arm64 job exposes connected prefetch and decisive network-disabled
+build as separate workflow steps. Cargo/V8 output is streamed while also being
+retained byte-for-byte as the governed build log; this changes observability,
+not the empty-cache or network boundary.
+
 ## Verification and claims
 
 `scripts/governed/verify_release.py` recomputes every enumerated digest, checks
@@ -204,10 +209,171 @@ bundle, publication, signing, or admission resulted.
 
 Prefetch now writes the installer-compatible exact URL stamp after verifying
 and extracting each locked sysroot. This deterministic handoff correction does
-not add an input or enable build networking. In accordance with the fail-closed
-stop condition, the decisive build was not retried in this task; only contract
-and static verification cover the correction. Full arm64 success remains
-unclaimed until the gated job completes from a new clean state.
+not add an input or enable build networking.
+
+The next exact clean attempt ran on GitHub Actions from reviewed fork head
+`c774d71b9b1d0021a5283b07d9185d6ec4d41b95`, merged to the governed baseline
+as `eddede228a9214c4dfb6a85aeca22abc0679100d`. It is retained separately as
+`arm64-clean-build-blocker-bindgen.json`. Digest-pinned prefetch again completed
+with 263 Cargo archives. The network-disabled cold V8 build then completed all
+4,337 Ninja actions and created an intermediate `librusty_v8.a`, but bindgen
+selected `/usr/include/features-time64.h` from the host header set and could not
+resolve target header `bits/wordsize.h`. Cargo therefore failed closed before
+the fixed test, evidence bundle, upload, publication, signing, or admission.
+
+The required target header was independently confirmed inside the already
+locked `libc6-dev-arm64-cross` archive with its declared SHA-256. Prefetch and
+build now refuse a closure missing the relevant glibc headers.
+
+The first header-path correction at
+`c92651bf4986817d36039154724030e87c8a1d5b` was deliberately dispatched from
+draft PR #4 and is retained as `arm64-clean-build-blocker-gn-bindgen.json`.
+Prefetch passed, but the profile-wide `BINDGEN_EXTRA_CLANG_ARGS` also reached
+Chromium's x64 host-tool bindgen action. That action retained its correct
+`--target=x86_64-unknown-linux-gnu` and `-msse3` arguments, then the leaked final
+arm64 target override made Clang reject the x64 flag at Ninja action 36 of 4,337.
+The build stopped before any intermediate archive, fixed test, bundle, or
+upload.
+
+The next correction removes global bindgen state. The final rusty_v8 binding
+builder alone reads the governed glibc sysroot and libclang resource-directory
+variables; Chromium's generated host and target bindgen actions remain
+unchanged. No package, digest, source gitlink, output cap, amd64 contract, or
+network policy changes.
+
+That correction was exercised at exact fork head
+`aa921fa48901bf28774d61248b0187c8b91c55a4` in GitHub Actions run
+`30859318722`, job `91837612159`, retained as
+`arm64-clean-build-blocker-verification.json`. The empty-cache,
+network-disabled Cargo release build completed in 94 minutes 37 seconds, which
+also proves the final governed bindgen correction completed. The subsequent
+fixed `get_version` Cargo command exited 101 before evidence collection. Its
+output had been redirected to the ephemeral target directory, and shell
+fail-fast handling stopped before printing or uploading it, so the exact
+compile/link/QEMU subfailure is deliberately recorded as unavailable rather
+than inferred. No verified bundle or artifact resulted.
+
+The next attempt separates test compilation, pinned cross-`readelf` AArch64
+identity, explicit pinned-QEMU execution, evidence collection, and bundle
+verification into individually logged stages. Every stage prints its exit
+status. A failure emits only a bounded diagnostic artifact; the complete
+unsigned, unpublished, unadmitted candidate bundle remains success-only. No
+LLVM, source, package, digest, object-cache, output-cap, or networking change is
+made by this diagnostic correction. Full arm64 success remains unclaimed until
+one new clean attempt completes every stage.
+
+That diagnostic attempt ran at exact fork head
+`31e7bd74d7bdca699be175c7f598eeaa1383ff1e` in GitHub Actions run
+`30867826822`, job `91863398357`, and is retained as
+`arm64-clean-build-blocker-linker-runtime.json`. Digest-pinned prefetch and the
+empty-cache, network-disabled Cargo release build completed; the latter took 81
+minutes 18 seconds and again completed V8 compilation and final rusty_v8
+bindgen. The separated `cargo test --no-run` stage reached the final link, where
+the pinned cross-linker's own loader exited 127 because its host-side
+`libbfd-2.40-arm64.so` was absent. The stage returned Cargo status 101. No test
+binary existed, so readelf, QEMU, evidence collection, bundle verification, and
+the full-bundle upload correctly did not run. The sole bounded blocker artifact
+verified internally and has GitHub SHA-256
+`e08b662b1a5f582fb48ee2c04bb3821cc8830971b65c029532caadebd3a2008f`.
+
+Independent inspection of the already declared
+`binutils-aarch64-linux-gnu=2.40-2` archive at its locked SHA-256 confirms that
+it already contains `usr/lib/x86_64-linux-gnu/libbfd-2.40-arm64.so`. No new
+package is needed. Prefetch now refuses a closure without that exact library,
+and the offline build exposes only the existing extracted cross-linker host
+library directory in addition to the existing LLVM bindgen directory. This
+correction does not change any input digest, LLVM, source, target sysroot,
+networking, object-cache policy, or output cap. ARM64 success remains unclaimed
+pending a new clean run.
+
+That new run used exact fork head
+`9c9181dd09da445294462b43b69f0b37240f0e9b` in GitHub Actions run
+`30873208247`, job `91879247103`, and is retained as
+`arm64-clean-build-blocker-sysroot-link.json`. Contract verification and
+digest-pinned prefetch passed. The empty-cache, network-disabled Cargo release
+build completed in 77 minutes 42 seconds, and the fixed-test compile reached
+the final ARM64 link. This confirms the cross linker's host runtime-path fix.
+The linker then exited 1 because the pinned glibc `libc.so` linker script names
+`/usr/aarch64-linux-gnu/lib/libc.so.6`, `libc_nonshared.a`, and
+`ld-linux-aarch64.so.1` as absolute paths, while the governed Debian closure is
+extracted beneath `/workspace/.governed-cache-arm64/cross`. Cargo returned 101.
+No test binary existed, so readelf, QEMU, evidence collection, bundle
+verification, and full-bundle upload correctly did not run.
+
+The sole bounded blocker artifact verified internally and has GitHub SHA-256
+`fbc73421f1b3f4eb544124c4ffe02314e4bc8e58db7da702c23b78a2e9c82159`.
+Independent inspection of the exact locked `libc6-arm64-cross` and
+`libc6-dev-arm64-cross` bytes confirms both the absolute linker-script entries
+and all three referenced files beneath the extracted closure. No package is
+missing. The next exact boundary is to supply the already pinned GCC linker
+with `--sysroot=/workspace/.governed-cache-arm64/cross`, retain explicit checks
+for all three files, and rerun one clean network-disabled ARM64 build. This is
+not an LLVM, V8, source, package, digest, networking, or object-cache change.
+
+The correction routes Cargo's ARM64 link commands through a governed wrapper
+that invokes the existing pinned `aarch64-linux-gnu-gcc-12` with
+`--sysroot=/workspace/.governed-cache-arm64/cross`. Prefetch and the decisive
+build both refuse a closure missing any of the three glibc linker-script
+members. Before the long V8 compile, the network-disabled container compiles a
+fixed benign C program, verifies its AArch64 ELF identity with the pinned
+cross-`readelf`, and executes it with the pinned QEMU/sysroot pair. These early
+stages retain bounded logs on failure and do not replace the final fixed
+`get_version` test. No package, digest, LLVM, V8 source, Rust toolchain, target
+sysroot contents, networking, cache, or output cap is changed. Full ARM64
+success remains unclaimed until every final stage and bundle verification pass.
+
+The corrected linker/sysroot attempt ran at exact fork head
+`343d1590df1615fb269036b23e3ca6f6aff81284` in GitHub Actions run
+`30911205915`, job `91998224324`, and is retained as
+`arm64-clean-build-blocker-evidence-collection.json`. The early fixed C link
+probe, pinned cross-`readelf`, and pinned QEMU execution all passed. The clean,
+network-disabled ARM64 Cargo release build completed in 108 minutes 37 seconds;
+`cargo test --no-run` then produced exactly one test executable, pinned
+cross-`readelf` identified it as AArch64, and the explicit pinned-QEMU
+`get_version` test passed. This establishes a working ARM64 build and fixed
+test, but not a complete governed bundle.
+
+Post-build evidence collection alone failed when the pinned GN executable was
+invoked as `gn args <out> --list`; bundle verification and the full-bundle
+upload therefore did not run. The checksum-verified bounded blocker artifact
+has GitHub SHA-256
+`214632058b5c02d9c371cefc610fe58d73458221efc718d89096f7148c89b5a7`.
+Before another expensive build, workflow-dispatch mode
+`diagnostic-arm64-gn` fetches only the exact already-declared GN archive and
+uses a fixed minimal GN project to test the exact absolute-path invocation plus
+option-first and relative-path variants inside the digest-pinned builder with
+networking disabled.
+
+That first short diagnostic ran at exact head
+`244641a9b4541a41852c2e5570bfed783a757597` in run `30924067086`, job
+`92041804796`. All four absolute/relative and option-before/after variants
+returned status zero, disproving both path form and option ordering as causes.
+Its internally verified 8,696-byte bounded evidence has GitHub SHA-256
+`bb75009c569a47ccf7812f1eb5aca27e091927758556da284857121d1a7956f5` and is
+retained as `arm64-gn-diagnostic-ordering.json`. No ARM64 or V8 build ran.
+
+Inspection of the exact governed source then identified the next controlled
+difference: `build.rs` successfully queries the generated GN output with
+`--script-executable=python3`, while the evidence collector omits GN's script
+interpreter setting. The short fixture now executes a benign fixed Python
+script during GN evaluation, generates with that interpreter explicitly, and
+compares queries with and without the setting.
+
+The revised diagnostic passed at exact head
+`e21917350e48cc920c9ed1984e671a6bb2113df0` in run `30924526706`, job
+`92043386254`. Both queries without the script setting failed status 1 because
+GN invoked unavailable `python` and the benign script returned 127; both
+queries with `--script-executable=python3` passed status zero. Its internally
+verified 8,081-byte evidence has GitHub SHA-256
+`2e28bf01bd66c24ba00b7cfc9c7bd14984a255e48be3cac0de9e4caa64a0f19c` and is
+retained as `arm64-gn-diagnostic-script-executable.json`. No ARM64 or V8 build
+ran.
+
+The collector now supplies precisely that proved setting, matching `build.rs`,
+and emits the combined bounded GN diagnostic output if the command ever fails
+again. The same short diagnostic must pass on the corrected exact head before a
+full ARM64 rerun. LLVM, V8 source, packages, digests, networking, caches, and
+the existing amd64 contract are unchanged.
 
 ## Ownership and update policy
 

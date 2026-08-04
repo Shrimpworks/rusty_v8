@@ -6,6 +6,7 @@ image="docker.io/library/rust@sha256:307d198027388f780db83929487de35084a73ecbaa3
 cache="$root/.governed-cache-arm64"
 target="$root/target/governed-v150.2.0-linux-arm64"
 out="$root/governed-out/v150.2.0/linux-arm64"
+blocker_out="$root/governed-out/v150.2.0/linux-arm64-blocker"
 mode=${1:-all}
 
 case "$mode" in
@@ -40,7 +41,8 @@ fi
 if [ "$mode" = build ] || [ "$mode" = all ]; then
   case "$target" in "$root"/target/governed-v150.2.0-linux-arm64) ;; *) exit 1 ;; esac
   case "$out" in "$root"/governed-out/v150.2.0/linux-arm64) ;; *) exit 1 ;; esac
-  rm -rf "$target" "$out"
+  case "$blocker_out" in "$root"/governed-out/v150.2.0/linux-arm64-blocker) ;; *) exit 1 ;; esac
+  rm -rf "$target" "$out" "$blocker_out"
   # shellcheck disable=SC2086
   docker run $common --network none --cap-drop ALL --security-opt no-new-privileges \
     -e GOVERNED_NETWORK_MODE=none \

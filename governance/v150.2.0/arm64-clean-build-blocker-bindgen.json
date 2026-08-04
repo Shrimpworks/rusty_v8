@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "status": "BLOCKED",
+  "claim": "no-complete-arm64-build-no-test-no-bundle-no-publication-no-admission",
+  "governedForkCommit": "c774d71b9b1d0021a5283b07d9185d6ec4d41b95",
+  "governedBaselineMergeCommit": "eddede228a9214c4dfb6a85aeca22abc0679100d",
+  "profile": "linux-arm64-release-simdutf-v1",
+  "builderImage": "docker.io/library/rust@sha256:307d198027388f780db83929487de35084a73ecbaa31319989438db38103439f",
+  "execution": {
+    "provider": "GitHub Actions",
+    "runId": 30848330515,
+    "jobId": 91802024503,
+    "runUrl": "https://github.com/dills122/rusty_v8/actions/runs/30848330515",
+    "jobUrl": "https://github.com/dills122/rusty_v8/actions/runs/30848330515/job/91802024503",
+    "runner": "ubuntu-24.04",
+    "startedAt": "2026-08-03T20:01:39Z",
+    "completedAt": "2026-08-03T21:55:18Z",
+    "conclusion": "failure"
+  },
+  "prefetch": {
+    "completed": true,
+    "cargoArchiveCount": 263,
+    "completedAt": "2026-08-03T20:06:58.6192793Z"
+  },
+  "cleanBuild": {
+    "networkMode": "none",
+    "targetDirectoryExisted": false,
+    "outputDirectoryExisted": false,
+    "sccachePresent": false,
+    "ccachePresent": false,
+    "buildStartedAt": "2026-08-03T20:07:01.9312988Z"
+  },
+  "observedProgress": {
+    "ninjaActionsCompleted": 4337,
+    "ninjaActionsTotal": 4337,
+    "intermediateArchiveProduced": true,
+    "intermediateArchiveRetained": false,
+    "bindgenCompleted": false,
+    "getVersionTestRan": false,
+    "bundleProduced": false
+  },
+  "failure": {
+    "phase": "cargo-build-bindgen-after-v8-archive",
+    "exitStatus": 1,
+    "message": "/usr/include/features-time64.h selected host headers while targeting arm64; libclang could not resolve bits/wordsize.h from the pinned target include closure",
+    "diagnostic": "Unable to generate bindings: ClangDiagnostic(\"/usr/include/features-time64.h:20:10: fatal error: 'bits/wordsize.h' file not found\\n\")"
+  },
+  "inputClosureValidation": {
+    "package": "libc6-dev-arm64-cross",
+    "version": "2.36-8cross1",
+    "sha256": "5e4cf6abf0e89e89c4b3006bb8b7dc47aa831df25d94df9134929b8b968cacb4",
+    "requiredHeader": "usr/aarch64-linux-gnu/include/bits/wordsize.h",
+    "headerPresent": true,
+    "newMutablePackageRequired": false
+  },
+  "failClosedAction": {
+    "mutablePackageInstall": false,
+    "networkEnabledForBuild": false,
+    "amd64Substitution": false,
+    "objectCacheReuse": false,
+    "automaticRetry": false
+  },
+  "nextBoundary": "Review an arm64-only bindgen target/header-path correction, then explicitly dispatch full-arm64 from its exact head. Success requires a new empty target/output state, network-disabled build and bindgen, fixed get_version test, evidence collection, bundle verification, and exact artifact identities. Do not rerun Capsule admission or publication work from this failed attempt."
+}

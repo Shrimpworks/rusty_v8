@@ -42,6 +42,24 @@ def main():
     source = json.loads((GOV / "source.lock.json").read_text())
     builder = json.loads((GOV / "builder-linux-arm64.lock.json").read_text())
     expected = json.loads((GOV / "expected-outputs-linux-arm64.json").read_text())
+    verification_blocker = json.loads(
+        (GOV / "arm64-clean-build-blocker-verification.json").read_text()
+    )
+    linker_runtime_blocker = json.loads(
+        (GOV / "arm64-clean-build-blocker-linker-runtime.json").read_text()
+    )
+    sysroot_link_blocker = json.loads(
+        (GOV / "arm64-clean-build-blocker-sysroot-link.json").read_text()
+    )
+    evidence_collection_blocker = json.loads(
+        (GOV / "arm64-clean-build-blocker-evidence-collection.json").read_text()
+    )
+    gn_ordering_diagnostic = json.loads(
+        (GOV / "arm64-gn-diagnostic-ordering.json").read_text()
+    )
+    gn_script_diagnostic = json.loads(
+        (GOV / "arm64-gn-diagnostic-script-executable.json").read_text()
+    )
 
     baseline = source["upstream"]
     if git("rev-parse", f'{baseline["commit"]}^{{tree}}') != baseline["tree"]:
@@ -54,6 +72,12 @@ def main():
         fail("merged governed baseline no longer matches the reviewed follow-up tree")
     if not git("merge-base", "--is-ancestor", "a31b8f39dc6933d5635367e8ccb67d70f2cc2385", "HEAD") == "":
         fail("HEAD does not descend from the exact merged governed baseline")
+    if git("rev-parse", "eddede228a9214c4dfb6a85aeca22abc0679100d^{tree}") != git(
+        "rev-parse", "c774d71b9b1d0021a5283b07d9185d6ec4d41b95^{tree}"
+    ):
+        fail("merged arm64 baseline no longer matches the reviewed PR #3 tree")
+    if not git("merge-base", "--is-ancestor", "eddede228a9214c4dfb6a85aeca22abc0679100d", "HEAD") == "":
+        fail("HEAD does not descend from the exact merged arm64 baseline")
 
     actual_links = {}
     for line in git("ls-files", "-s").splitlines():
@@ -100,11 +124,151 @@ def main():
         fail("unexpected Rust toolchain or target")
     if builder["cargo"]["hostToolchainPath"] != "/usr/local/rustup/toolchains/1.91.0-x86_64-unknown-linux-gnu":
         fail("unexpected builder-image Rust toolchain path")
+    cross_toolchain = builder["crossToolchain"]
+    if cross_toolchain.get("linkerWrapper") != "scripts/governed/link_arm64.sh" or cross_toolchain.get(
+        "linkerSysroot"
+    ) != "/workspace/.governed-cache-arm64/cross":
+        fail("unexpected ARM64 linker wrapper or extracted sysroot")
+    for path_key, digest_key in (
+        ("linkerWrapper", "linkerWrapperSha256"),
+        ("linkProbeSource", "linkProbeSourceSha256"),
+    ):
+        path = ROOT / cross_toolchain[path_key]
+        require_digest(cross_toolchain[digest_key], digest_key)
+        if sha256(path) != cross_toolchain[digest_key]:
+            fail(f"{path_key} differs from its governed digest")
+    environment = builder["environment"]
+    if "BINDGEN_EXTRA_CLANG_ARGS" in environment:
+        fail("global bindgen arguments would leak into Chromium host tools")
+    if environment["RUSTY_V8_GLIBC_SYSROOT"] != (
+        "/workspace/.governed-cache-arm64/cross/usr/aarch64-linux-gnu"
+    ):
+        fail("unexpected arm64 bindgen target/header closure")
+    if environment["RUSTY_V8_BINDGEN_RESOURCE_DIR"] != (
+        "/workspace/.governed-cache-arm64/llvm19/usr/lib/llvm-19/lib/clang/19"
+    ):
+        fail("unexpected arm64 bindgen resource directory")
+    if environment["CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER"] != (
+        "/workspace/scripts/governed/link_arm64.sh"
+    ):
+        fail("Cargo must use the governed ARM64 sysroot linker wrapper")
+    if environment["LD_LIBRARY_PATH"] != (
+        "/workspace/.governed-cache-arm64/llvm19/usr/lib/x86_64-linux-gnu:"
+        "/workspace/.governed-cache-arm64/cross/usr/lib/x86_64-linux-gnu"
+    ):
+        fail("unexpected host library path for bindgen and the pinned cross linker")
     for key in ("rustcCommit", "cargoCommit"):
         if not re.fullmatch(r"[0-9a-f]{40}", builder["cargo"][key]):
             fail(f"invalid {key}")
     if builder["claims"] != {"unsigned": True, "admitted": False, "published": False, "independentBuilder": False}:
         fail("arm64 claims must remain unsigned, unpublished, unadmitted, and non-independent")
+    if verification_blocker.get("governedForkCommit") != "aa921fa48901bf28774d61248b0187c8b91c55a4":
+        fail("post-build verification blocker is not bound to the exact failed head")
+    execution = verification_blocker.get("execution", {})
+    if execution.get("runId") != 30859318722 or execution.get("jobId") != 91837612159:
+        fail("post-build verification blocker is not bound to the exact failed run/job")
+    failure = verification_blocker.get("failure", {})
+    if failure.get("phase") != "fixed-get-version-verification" or failure.get("diagnosticRetained") is not False:
+        fail("post-build verification blocker does not retain the diagnostic gap")
+    if linker_runtime_blocker.get("governedForkCommit") != "31e7bd74d7bdca699be175c7f598eeaa1383ff1e":
+        fail("linker runtime blocker is not bound to the exact diagnostic head")
+    linker_execution = linker_runtime_blocker.get("execution", {})
+    if linker_execution.get("runId") != 30867826822 or linker_execution.get("jobId") != 91863398357:
+        fail("linker runtime blocker is not bound to the exact failed run/job")
+    linker_failure = linker_runtime_blocker.get("failure", {})
+    if linker_failure.get("phase") != "fixed-test-compile" or "libbfd-2.40-arm64.so" not in linker_failure.get(
+        "diagnostic", ""
+    ):
+        fail("linker runtime blocker does not retain the exact missing library diagnostic")
+    if sysroot_link_blocker.get("governedForkCommit") != "9c9181dd09da445294462b43b69f0b37240f0e9b":
+        fail("sysroot-link blocker is not bound to the exact corrected head")
+    sysroot_execution = sysroot_link_blocker.get("execution", {})
+    if sysroot_execution.get("runId") != 30873208247 or sysroot_execution.get("jobId") != 91879247103:
+        fail("sysroot-link blocker is not bound to the exact failed run/job")
+    sysroot_failure = sysroot_link_blocker.get("failure", {})
+    if sysroot_failure.get("phase") != "fixed-test-compile" or sysroot_failure.get("missingAbsolutePaths") != [
+        "/usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1",
+        "/usr/aarch64-linux-gnu/lib/libc.so.6",
+        "/usr/aarch64-linux-gnu/lib/libc_nonshared.a",
+    ]:
+        fail("sysroot-link blocker does not retain the exact absolute-path diagnostic")
+    if evidence_collection_blocker.get("governedForkCommit") != "343d1590df1615fb269036b23e3ca6f6aff81284":
+        fail("evidence-collection blocker is not bound to the exact working ARM64 build head")
+    evidence_execution = evidence_collection_blocker.get("execution", {})
+    if evidence_execution.get("runId") != 30911205915 or evidence_execution.get("jobId") != 91998224324:
+        fail("evidence-collection blocker is not bound to the exact failed run/job")
+    evidence_stages = evidence_collection_blocker.get("observedStages", {})
+    if not all(
+        evidence_stages.get(key) == 0
+        for key in (
+            "arm64LinkProbeExitStatus",
+            "arm64LinkProbeReadelfExitStatus",
+            "arm64LinkProbeQemuExitStatus",
+            "cargoBuildExitStatus",
+            "fixedTestCompileExitStatus",
+            "fixedTestReadelfExitStatus",
+            "fixedTestQemuExitStatus",
+        )
+    ):
+        fail("evidence-collection blocker does not retain all passing ARM64 build/test stages")
+    if evidence_stages.get("fixedTestMachine") != "AArch64" or evidence_stages.get("fixedGetVersionPassed") is not True:
+        fail("evidence-collection blocker does not retain the AArch64 get_version success")
+    evidence_failure = evidence_collection_blocker.get("failure", {})
+    expected_failed_command = [
+        "/workspace/.governed-cache-arm64/gn/gn",
+        "args",
+        "/workspace/target/governed-v150.2.0-linux-arm64/aarch64-unknown-linux-gnu/release/gn_out",
+        "--list",
+    ]
+    if evidence_failure.get("phase") != "evidence-collection" or evidence_failure.get("command") != expected_failed_command:
+        fail("evidence-collection blocker does not retain the exact failed GN command")
+    evidence_artifact = evidence_collection_blocker.get("boundedArtifact", {})
+    if evidence_artifact.get("sha256") != "214632058b5c02d9c371cefc610fe58d73458221efc718d89096f7148c89b5a7" or evidence_artifact.get(
+        "internalChecksumsVerified"
+    ) is not True:
+        fail("evidence-collection blocker artifact identity is not retained and verified")
+    if gn_ordering_diagnostic.get("governedForkCommit") != "244641a9b4541a41852c2e5570bfed783a757597":
+        fail("GN ordering diagnostic is not bound to its exact head")
+    gn_diagnostic_execution = gn_ordering_diagnostic.get("execution", {})
+    if gn_diagnostic_execution.get("runId") != 30924067086 or gn_diagnostic_execution.get("jobId") != 92041804796:
+        fail("GN ordering diagnostic is not bound to its exact run/job")
+    if set(gn_ordering_diagnostic.get("observedStatuses", {}).values()) != {0}:
+        fail("GN ordering diagnostic does not retain all four successful variants")
+    gn_diagnosis = gn_ordering_diagnostic.get("diagnosis", {})
+    if gn_diagnosis.get("optionOrderingCause") is not False or gn_diagnosis.get("absoluteOutputPathCause") is not False:
+        fail("GN ordering diagnostic does not retain the disproven causes")
+    gn_diagnostic_artifact = gn_ordering_diagnostic.get("boundedArtifact", {})
+    if gn_diagnostic_artifact.get("sha256") != "bb75009c569a47ccf7812f1eb5aca27e091927758556da284857121d1a7956f5" or gn_diagnostic_artifact.get(
+        "internalChecksumsVerified"
+    ) is not True:
+        fail("GN ordering diagnostic artifact identity is not retained and verified")
+    if gn_script_diagnostic.get("governedForkCommit") != "e21917350e48cc920c9ed1984e671a6bb2113df0":
+        fail("GN script-executable diagnostic is not bound to its exact head")
+    gn_script_execution = gn_script_diagnostic.get("execution", {})
+    if gn_script_execution.get("runId") != 30924526706 or gn_script_execution.get("jobId") != 92043386254:
+        fail("GN script-executable diagnostic is not bound to its exact run/job")
+    expected_script_statuses = {
+        "withoutScriptExecutable": 1,
+        "withoutScriptExecutableOptionFirst": 1,
+        "withScriptExecutable": 0,
+        "withScriptExecutableOptionFirst": 0,
+    }
+    if gn_script_diagnostic.get("observedStatuses") != expected_script_statuses:
+        fail("GN script-executable diagnostic does not retain the proved status matrix")
+    gn_script_diagnosis = gn_script_diagnostic.get("diagnosis", {})
+    if gn_script_diagnosis.get("defaultInterpreterExitStatus") != 127 or gn_script_diagnosis.get(
+        "matchingBuildRsSetting"
+    ) != "--script-executable=python3":
+        fail("GN script-executable diagnostic does not retain the exact interpreter diagnosis")
+    gn_script_artifact = gn_script_diagnostic.get("boundedArtifact", {})
+    if gn_script_artifact.get("sha256") != "2e28bf01bd66c24ba00b7cfc9c7bd14984a255e48be3cac0de9e4caa64a0f19c" or gn_script_artifact.get(
+        "internalChecksumsVerified"
+    ) is not True:
+        fail("GN script-executable diagnostic artifact identity is not retained and verified")
+    collector = (ROOT / "scripts/governed/collect_arm64_evidence.py").read_text()
+    expected_gn_query = '[str(gn), "--script-executable=python3", "args", str(GN_OUT), "--list"]'
+    if expected_gn_query not in collector:
+        fail("ARM64 collector does not use the GN script interpreter proved by the short diagnostic")
 
     artifacts = [builder["clang"], builder["cargo"]["targetStandardLibrary"], builder["v8RustToolchain"]]
     artifacts.extend(builder["llvm19Bindgen"]["packages"])

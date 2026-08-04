@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "profile": "linux-arm64-release-simdutf-v1",
+  "status": "retained-blocker",
+  "claim": "The clean network-disabled ARM64 build and bindgen completed, but fixed-test compilation failed because the pinned cross-linker's extracted host library directory was absent from its runtime search path.",
+  "governedForkCommit": "31e7bd74d7bdca699be175c7f598eeaa1383ff1e",
+  "execution": {
+    "runId": 30867826822,
+    "jobId": 91863398357,
+    "networkMode": "none",
+    "targetDirectoryExisted": false,
+    "outputDirectoryExisted": false,
+    "compilerObjectCachePresent": false,
+    "buildPlatform": "linux/amd64",
+    "targetPlatform": "linux/arm64",
+    "independentBuilder": false
+  },
+  "observedStages": {
+    "cargoBuildExitStatus": 0,
+    "cargoBuildDurationSeconds": 4878,
+    "fixedTestCompileExitStatus": 101,
+    "fixedTestReadelfRan": false,
+    "fixedTestQemuRan": false,
+    "evidenceCollectionRan": false,
+    "bundleVerificationRan": false
+  },
+  "failure": {
+    "phase": "fixed-test-compile",
+    "linker": "/workspace/.governed-cache-arm64/cross/usr/bin/aarch64-linux-gnu-gcc-12",
+    "diagnostic": "/workspace/.governed-cache-arm64/cross/usr/aarch64-linux-gnu/bin/ld: error while loading shared libraries: libbfd-2.40-arm64.so: cannot open shared object file: No such file or directory",
+    "linkerLoaderExitStatus": 127,
+    "llvmChanged": false
+  },
+  "boundedArtifact": {
+    "id": 8878271289,
+    "name": "rusty-v8-v150.2.0-linux-arm64-blocker-30867826822",
+    "compressedSizeBytes": 19407,
+    "uncompressedSizeBytes": 52141,
+    "sha256": "e08b662b1a5f582fb48ee2c04bb3821cc8830971b65c029532caadebd3a2008f",
+    "internalChecksumsVerified": true,
+    "fullBundleUploaded": false
+  },
+  "justifiedClosureCorrection": {
+    "existingPackage": "binutils-aarch64-linux-gnu=2.40-2",
+    "existingPackageSha256": "3d6f64a7a4ed6d73719f8fa2e85fd896f58ff7f211a6683942ba93de690aaa66",
+    "runtimeLibraryDirectory": "/workspace/.governed-cache-arm64/cross/usr/lib/x86_64-linux-gnu",
+    "requiredLibrary": "libbfd-2.40-arm64.so",
+    "addsPackages": false,
+    "changesCompilerOrLlvm": false,
+    "changesTargetSysroot": false
+  },
+  "claims": {
+    "unsigned": true,
+    "published": false,
+    "admitted": false,
+    "released": false,
+    "signed": false,
+    "runtimeWired": false,
+    "successfulArm64Bundle": false
+  },
+  "nextBoundary": "Expose the already extracted digest-pinned cross-linker host library directory, then run one clean empty-target/output, network-disabled ARM64 build and all separated verification stages."
+}

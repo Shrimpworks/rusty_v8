@@ -20,6 +20,7 @@ on:
         options:
           - contract
           - full
+          - diagnostic-arm64-gn
           - full-arm64
 
 permissions:
@@ -38,6 +39,7 @@ jobs:
       - name: Verify scripts and JSON
         run: |
           python3 -m py_compile scripts/governed/*.py
+          for script in scripts/governed/*.sh; do sh -n "$script"; done
           python3 -m json.tool governance/v150.2.0/builder.lock.json >/dev/null
           python3 -m json.tool governance/v150.2.0/source.lock.json >/dev/null
           python3 -m json.tool governance/v150.2.0/retained-pr56-evidence.json >/dev/null
@@ -45,6 +47,14 @@ jobs:
           python3 -m json.tool governance/v150.2.0/builder-linux-arm64.lock.json >/dev/null
           python3 -m json.tool governance/v150.2.0/expected-outputs-linux-arm64.json >/dev/null
           python3 -m json.tool governance/v150.2.0/arm64-clean-build-blocker.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/arm64-clean-build-blocker-bindgen.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/arm64-clean-build-blocker-gn-bindgen.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/arm64-clean-build-blocker-verification.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/arm64-clean-build-blocker-linker-runtime.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/arm64-clean-build-blocker-sysroot-link.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/arm64-clean-build-blocker-evidence-collection.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/arm64-gn-diagnostic-ordering.json >/dev/null
+          python3 -m json.tool governance/v150.2.0/arm64-gn-diagnostic-script-executable.json >/dev/null
           python3 scripts/governed/verify_arm64_inputs.py
           git diff --check d305e6afa7736f6e298c30ae6646f7709ee9382b...HEAD
 
@@ -69,6 +79,38 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  arm64-gn-diagnostic:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'diagnostic-arm64-gn'
+    needs: contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out exact diagnostic tree
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          fetch-depth: 0
+      - name: Prefetch only the declared digest-pinned GN input
+        run: scripts/governed/run-arm64-gn-diagnostic.sh prefetch
+      - name: Probe exact GN evidence command variants with networking disabled
+        id: arm64-gn-diagnostic
+        run: scripts/governed/run-arm64-gn-diagnostic.sh diagnostic
+      - name: Upload successful bounded GN diagnostic evidence
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: rusty-v8-v150.2.0-linux-arm64-gn-diagnostic-${{ github.run_id }}
+          path: governed-out/v150.2.0/linux-arm64-gn-diagnostic/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload failed bounded GN diagnostic evidence
+        if: failure() && steps.arm64-gn-diagnostic.outcome == 'failure'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: rusty-v8-v150.2.0-linux-arm64-gn-diagnostic-blocker-${{ github.run_id }}
+          path: governed-out/v150.2.0/linux-arm64-gn-diagnostic/
+          if-no-files-found: error
+          retention-days: 30
+
   arm64-full-build:
     if: >-
       (github.event_name == 'workflow_dispatch' && inputs.mode == 'full-arm64') ||
@@ -82,9 +124,21 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-      - name: Build arm64 with digest-only prefetch and network-none compilation
-        run: scripts/governed/run-arm64-builder.sh all
+      - name: Prefetch digest-pinned arm64 inputs
+        run: scripts/governed/run-arm64-builder.sh prefetch
+      - name: Build and visibly verify arm64 with network-none execution
+        id: arm64-build
+        run: scripts/governed/run-arm64-builder.sh build
+      - name: Upload bounded arm64 blocker evidence
+        if: failure() && steps.arm64-build.outcome == 'failure'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: rusty-v8-v150.2.0-linux-arm64-blocker-${{ github.run_id }}
+          path: governed-out/v150.2.0/linux-arm64-blocker/
+          if-no-files-found: error
+          retention-days: 30
       - name: Upload unsigned unadmitted arm64 bundle
+        if: success()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: rusty-v8-v150.2.0-linux-arm64-unsigned

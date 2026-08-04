@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "profile": "linux-arm64-release-simdutf-v1",
+  "status": "retained-blocker",
+  "claim": "The clean network-disabled ARM64 build and bindgen completed, and the pinned cross linker loaded, but fixed-test linking did not relocate absolute paths in the pinned glibc linker script beneath the extracted sysroot.",
+  "governedForkCommit": "9c9181dd09da445294462b43b69f0b37240f0e9b",
+  "execution": {
+    "runId": 30873208247,
+    "jobId": 91879247103,
+    "networkMode": "none",
+    "targetDirectoryExisted": false,
+    "outputDirectoryExisted": false,
+    "compilerObjectCachePresent": false,
+    "buildPlatform": "linux/amd64",
+    "targetPlatform": "linux/arm64",
+    "independentBuilder": false
+  },
+  "observedStages": {
+    "cargoBuildExitStatus": 0,
+    "cargoBuildDurationSeconds": 4662,
+    "fixedTestCompileExitStatus": 101,
+    "fixedTestReadelfRan": false,
+    "fixedTestQemuRan": false,
+    "evidenceCollectionRan": false,
+    "bundleVerificationRan": false
+  },
+  "failure": {
+    "phase": "fixed-test-compile",
+    "linker": "/workspace/.governed-cache-arm64/cross/usr/bin/aarch64-linux-gnu-gcc-12",
+    "missingAbsolutePaths": [
+      "/usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1",
+      "/usr/aarch64-linux-gnu/lib/libc.so.6",
+      "/usr/aarch64-linux-gnu/lib/libc_nonshared.a"
+    ],
+    "linkerExitStatus": 1,
+    "cargoExitStatus": 101,
+    "llvmChanged": false
+  },
+  "declaredInputInspection": {
+    "libc6Arm64CrossSha256": "91936cbbee75771c360ed16513f6e734a25ca5517fe7c3e13dfd7835d7553186",
+    "libc6DevArm64CrossSha256": "5e4cf6abf0e89e89c4b3006bb8b7dc47aa831df25d94df9134929b8b968cacb4",
+    "linkerScript": "usr/aarch64-linux-gnu/lib/libc.so",
+    "linkerScriptUsesAbsolutePaths": true,
+    "allReferencedFilesExistBelowExtractedSysroot": true,
+    "addsPackages": false
+  },
+  "boundedArtifact": {
+    "id": 8879981906,
+    "name": "rusty-v8-v150.2.0-linux-arm64-blocker-30873208247",
+    "compressedSizeBytes": 19417,
+    "uncompressedSizeBytes": 52534,
+    "sha256": "fbc73421f1b3f4eb544124c4ffe02314e4bc8e58db7da702c23b78a2e9c82159",
+    "internalChecksumsVerified": true,
+    "fullBundleUploaded": false
+  },
+  "claims": {
+    "unsigned": true,
+    "published": false,
+    "admitted": false,
+    "released": false,
+    "signed": false,
+    "runtimeWired": false,
+    "successfulArm64Bundle": false
+  },
+  "nextBoundary": "Configure the existing pinned aarch64-linux-gnu-gcc-12 link invocation with --sysroot=/workspace/.governed-cache-arm64/cross, verify the three linker-script members remain present, and run one new clean network-disabled ARM64 build."
+}

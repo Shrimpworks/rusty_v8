@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "profile": "linux-arm64-release-simdutf-v1",
+  "status": "retained-diagnostic-blocker",
+  "claim": "A short network-disabled pinned-GN matrix disproved option ordering and absolute output paths as the cause of the full-build evidence failure.",
+  "governedForkCommit": "244641a9b4541a41852c2e5570bfed783a757597",
+  "execution": {
+    "runId": 30924067086,
+    "jobId": 92041804796,
+    "networkMode": "none",
+    "fullArm64BuildRan": false,
+    "buildPlatform": "linux/amd64",
+    "independentBuilder": false
+  },
+  "observedStatuses": {
+    "exactLegacyAbsolute": 0,
+    "optionFirstAbsolute": 0,
+    "legacyRelative": 0,
+    "optionFirstRelative": 0
+  },
+  "diagnosis": {
+    "optionOrderingCause": false,
+    "absoluteOutputPathCause": false,
+    "nextDifference": "build.rs passes --script-executable=python3 before the args command; collect_arm64_evidence.py omits it",
+    "collectorChanged": false
+  },
+  "boundedArtifact": {
+    "id": 8898326019,
+    "name": "rusty-v8-v150.2.0-linux-arm64-gn-diagnostic-blocker-30924067086",
+    "compressedSizeBytes": 5040,
+    "uncompressedSizeBytes": 8696,
+    "sha256": "bb75009c569a47ccf7812f1eb5aca27e091927758556da284857121d1a7956f5",
+    "internalChecksumsVerified": true
+  },
+  "claims": {
+    "unsigned": true,
+    "published": false,
+    "admitted": false,
+    "released": false,
+    "signed": false,
+    "runtimeWired": false
+  },
+  "nextBoundary": "Make the fixed minimal GN project execute a benign Python script, generate it with --script-executable=python3, and compare evidence queries with and without that exact global GN setting. Do not change the collector or dispatch a full ARM64 build until the short probe proves the difference."
+}

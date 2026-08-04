@@ -54,6 +54,9 @@ def main():
     evidence_collection_blocker = json.loads(
         (GOV / "arm64-clean-build-blocker-evidence-collection.json").read_text()
     )
+    gn_ordering_diagnostic = json.loads(
+        (GOV / "arm64-gn-diagnostic-ordering.json").read_text()
+    )
 
     baseline = source["upstream"]
     if git("rev-parse", f'{baseline["commit"]}^{{tree}}') != baseline["tree"]:
@@ -221,6 +224,21 @@ def main():
         "internalChecksumsVerified"
     ) is not True:
         fail("evidence-collection blocker artifact identity is not retained and verified")
+    if gn_ordering_diagnostic.get("governedForkCommit") != "244641a9b4541a41852c2e5570bfed783a757597":
+        fail("GN ordering diagnostic is not bound to its exact head")
+    gn_diagnostic_execution = gn_ordering_diagnostic.get("execution", {})
+    if gn_diagnostic_execution.get("runId") != 30924067086 or gn_diagnostic_execution.get("jobId") != 92041804796:
+        fail("GN ordering diagnostic is not bound to its exact run/job")
+    if set(gn_ordering_diagnostic.get("observedStatuses", {}).values()) != {0}:
+        fail("GN ordering diagnostic does not retain all four successful variants")
+    gn_diagnosis = gn_ordering_diagnostic.get("diagnosis", {})
+    if gn_diagnosis.get("optionOrderingCause") is not False or gn_diagnosis.get("absoluteOutputPathCause") is not False:
+        fail("GN ordering diagnostic does not retain the disproven causes")
+    gn_diagnostic_artifact = gn_ordering_diagnostic.get("boundedArtifact", {})
+    if gn_diagnostic_artifact.get("sha256") != "bb75009c569a47ccf7812f1eb5aca27e091927758556da284857121d1a7956f5" or gn_diagnostic_artifact.get(
+        "internalChecksumsVerified"
+    ) is not True:
+        fail("GN ordering diagnostic artifact identity is not retained and verified")
 
     artifacts = [builder["clang"], builder["cargo"]["targetStandardLibrary"], builder["v8RustToolchain"]]
     artifacts.extend(builder["llvm19Bindgen"]["packages"])

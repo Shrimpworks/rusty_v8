@@ -342,10 +342,25 @@ Before another expensive build, workflow-dispatch mode
 `diagnostic-arm64-gn` fetches only the exact already-declared GN archive and
 uses a fixed minimal GN project to test the exact absolute-path invocation plus
 option-first and relative-path variants inside the digest-pinned builder with
-networking disabled. No collector correction is applied until that short gate
-reproduces the failure and identifies a passing variant. A full ARM64 rerun
-remains gated until the diagnostic succeeds; LLVM, V8 source, packages,
-digests, networking, caches, and the existing amd64 contract are unchanged.
+networking disabled.
+
+That first short diagnostic ran at exact head
+`244641a9b4541a41852c2e5570bfed783a757597` in run `30924067086`, job
+`92041804796`. All four absolute/relative and option-before/after variants
+returned status zero, disproving both path form and option ordering as causes.
+Its internally verified 8,696-byte bounded evidence has GitHub SHA-256
+`bb75009c569a47ccf7812f1eb5aca27e091927758556da284857121d1a7956f5` and is
+retained as `arm64-gn-diagnostic-ordering.json`. No ARM64 or V8 build ran.
+
+Inspection of the exact governed source then identified the next controlled
+difference: `build.rs` successfully queries the generated GN output with
+`--script-executable=python3`, while the evidence collector omits GN's script
+interpreter setting. The short fixture now executes a benign fixed Python
+script during GN evaluation, generates with that interpreter explicitly, and
+compares queries with and without the setting. The collector remains unchanged
+until this revised network-disabled probe proves the difference. A full ARM64
+rerun remains gated; LLVM, V8 source, packages, digests, networking, caches, and
+the existing amd64 contract are unchanged.
 
 ## Ownership and update policy
 

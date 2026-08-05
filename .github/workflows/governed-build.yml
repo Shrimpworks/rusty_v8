@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - capsule/upstream-v150.2.0-d305e6a
+      - capsule/review-v150.2.0-r5
     types:
       - opened
       - synchronize

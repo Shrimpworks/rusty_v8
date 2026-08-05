@@ -14,6 +14,7 @@ on:
 
 jobs:
   rust:
+    if: github.repository == 'denoland/rusty_v8'
     name: release
     runs-on: ubuntu-latest
     timeout-minutes: 120

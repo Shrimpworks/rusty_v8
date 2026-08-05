@@ -400,12 +400,18 @@ the existing amd64 contract are unchanged.
 
 ## Ownership and update policy
 
-- Owner: `Shrimpworks/rusty_v8` maintainers; Capsule runtime/supply-chain reviewers
-  approve governed changes and publication manifests.
+- Owner: `Shrimpworks/rusty_v8` maintainers. Separate Capsule runtime and
+  supply-chain review applies to product adoption and publication manifests.
 - Review routing: `.github/CODEOWNERS` requests `@dills122` review for the
-  governed locks, scripts, workflow, and CODEOWNERS itself. Required-review and
-  branch-protection enforcement remains a repository setting and is not claimed
-  solely from this file.
+  governed locks, scripts, workflow, and CODEOWNERS itself. While the fork has
+  one qualified maintainer, mutable `main` and the current governed review target
+  require pull requests, green required checks, resolved conversations,
+  administrator enforcement, no force-push, no deletion, evidence readback, and
+  maintainer self-review, but GitHub requires zero approving reviews and does not
+  require most-recent-push or CODEOWNER approval. External approval enforcement
+  may be enabled when a second qualified maintainer is available. This does not
+  waive a separate DCO, upstream-submission, product-admission, or independent
+  security-review boundary.
 - Advisories: monitor RustSec, GitHub advisories for this fork and
   `denoland/rusty_v8`, Chromium/V8 security releases, and material third-party
   component advisories. Affected unpublished candidates are discarded; affected

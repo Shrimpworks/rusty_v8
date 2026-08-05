@@ -3,12 +3,35 @@
 Status: bootstrap only. This contract does not admit a Capsule runtime, publish a
 release, or claim equality with the historical upstream archive.
 
+## Fork branch ledger
+
+This fork is a Capsule-governed product line. Its `main` branch is a lagging
+upstream-integration mirror only; a commit on `main` is not adopted into
+Capsule. The retained v150.2.0 identities are:
+
+| Revision | Reviewed head | Accepted merge |
+| --- | --- | --- |
+| r1 amd64 bootstrap | `capsule/reviewed-head-v150.2.0-r1` / `17698caedb8721c132a3e2f08f7ab0ae212f313a` | `capsule/accepted-v150.2.0-r1` / `ab3413d0bc878601f75bf14a56e2faf635c19b9a` |
+| r2 offline closure | `capsule/reviewed-head-v150.2.0-r2` / `a43ee7486c3e05bce5d6e5db586b3e2e688c33cf` | `capsule/accepted-v150.2.0-r2` / `a31b8f39dc6933d5635367e8ccb67d70f2cc2385` |
+| r3 arm64 profile | `capsule/reviewed-head-v150.2.0-r3` / `c774d71b9b1d0021a5283b07d9185d6ec4d41b95` | `capsule/accepted-v150.2.0-r3` / `eddede228a9214c4dfb6a85aeca22abc0679100d` |
+| r4 arm64 accepted | `capsule/reviewed-head-v150.2.0-r4` / `80e863ddb942a4aa2b384e794fc23e35b9d2bb15` | `capsule/accepted-v150.2.0-r4` / `cbf56de2e1156b1cf1561fdbaea7172a0aa056f4` |
+
+The official anchor is protected separately as `capsule/anchor-v150.2.0` at
+`d305e6afa7736f6e298c30ae6646f7709ee9382b`. The historical
+`capsule/upstream-v150.2.0-d305e6a` name now points at r4 rather than the official
+anchor; it is retained and locked for recovery. The fresh r5 review target is
+`capsule/review-v150.2.0-r5`, created from the exact r4 accepted merge. Work
+occurs on an explicit disposable `codex/` head. Upstream changes are logical
+backports and never a wholesale merge of upstream `main` into this pinned line.
+
 ## Boundary
 
 This line is based on official `denoland/rusty_v8` tag `v150.2.0`, commit
-`d305e6afa7736f6e298c30ae6646f7709ee9382b`. The baseline branch is
-`capsule/upstream-v150.2.0-d305e6a`; governed changes are reviewed against that
-branch. Fork `main` is not moved or rewritten.
+`d305e6afa7736f6e298c30ae6646f7709ee9382b`. The current review target is
+`capsule/review-v150.2.0-r5`; governed changes are reviewed against that fresh
+versioned branch. Fork `main` is not moved or rewritten. The fork-local manual
+release job is disabled unless the repository identity is exactly
+`denoland/rusty_v8`.
 
 The first build profile is deliberately narrow:
 
@@ -377,7 +400,7 @@ the existing amd64 contract are unchanged.
 
 ## Ownership and update policy
 
-- Owner: `dills122/rusty_v8` maintainers; Capsule runtime/supply-chain reviewers
+- Owner: `Shrimpworks/rusty_v8` maintainers; Capsule runtime/supply-chain reviewers
   approve governed changes and publication manifests.
 - Review routing: `.github/CODEOWNERS` requests `@dills122` review for the
   governed locks, scripts, workflow, and CODEOWNERS itself. Required-review and

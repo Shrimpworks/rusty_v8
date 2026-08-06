@@ -15,23 +15,26 @@ Capsule. The retained v150.2.0 identities are:
 | r2 offline closure | `capsule/reviewed-head-v150.2.0-r2` / `a43ee7486c3e05bce5d6e5db586b3e2e688c33cf` | `capsule/accepted-v150.2.0-r2` / `a31b8f39dc6933d5635367e8ccb67d70f2cc2385` |
 | r3 arm64 profile | `capsule/reviewed-head-v150.2.0-r3` / `c774d71b9b1d0021a5283b07d9185d6ec4d41b95` | `capsule/accepted-v150.2.0-r3` / `eddede228a9214c4dfb6a85aeca22abc0679100d` |
 | r4 arm64 accepted | `capsule/reviewed-head-v150.2.0-r4` / `80e863ddb942a4aa2b384e794fc23e35b9d2bb15` | `capsule/accepted-v150.2.0-r4` / `cbf56de2e1156b1cf1561fdbaea7172a0aa056f4` |
+| r5 fork roles | `capsule/reviewed-head-v150.2.0-r5` / `84dea3cc1242ce38baca61611546d68c11e0f605` | `capsule/accepted-v150.2.0-r5` / `d09221062280ae1675fe26c53c3f43871aae2055` |
 
 The official anchor is protected separately as `capsule/anchor-v150.2.0` at
 `d305e6afa7736f6e298c30ae6646f7709ee9382b`. The historical
 `capsule/upstream-v150.2.0-d305e6a` name now points at r4 rather than the official
-anchor; it is retained and locked for recovery. The fresh r5 review target is
-`capsule/review-v150.2.0-r5`, created from the exact r4 accepted merge. Work
-occurs on an explicit disposable `codex/` head. Upstream changes are logical
-backports and never a wholesale merge of upstream `main` into this pinned line.
+anchor; it is retained and locked for recovery. The fork default is the locked
+r5 accepted merge. The current mutable target is
+`capsule/review-v150.2.0-r6`, created at that exact accepted commit,
+`d09221062280ae1675fe26c53c3f43871aae2055`. Every later change creates a fresh
+`capsule/review-v150.2.0-rN` target from the preceding accepted merge and an
+explicit disposable `codex/` head. Upstream changes are logical backports and
+never a wholesale merge of upstream `main` into this pinned line.
 
 ## Boundary
 
 This line is based on official `denoland/rusty_v8` tag `v150.2.0`, commit
-`d305e6afa7736f6e298c30ae6646f7709ee9382b`. The current review target is
-`capsule/review-v150.2.0-r5`; governed changes are reviewed against that fresh
-versioned branch. Fork `main` is not moved or rewritten. The fork-local manual
-release job is disabled unless the repository identity is exactly
-`denoland/rusty_v8`.
+`d305e6afa7736f6e298c30ae6646f7709ee9382b`. Governed changes are reviewed on a
+fresh versioned `capsule/review-v150.2.0-rN` branch. Fork `main` is not moved or
+rewritten. The fork-local manual release job is disabled unless the repository
+identity is exactly `denoland/rusty_v8`.
 
 The first build profile is deliberately narrow:
 
@@ -412,6 +415,10 @@ the existing amd64 contract are unchanged.
   may be enabled when a second qualified maintainer is available. This does not
   waive a separate DCO, upstream-submission, product-admission, or independent
   security-review boundary.
+- CI admission: pull requests and pushes for current/future versioned governed
+  review and accepted refs run the contract plus clean Linux/arm64 construction.
+  Their stable aggregate context is `Governed admission`; the workflow has no
+  path filter and never enables the upstream `main` matrix or release job.
 - Advisories: monitor RustSec, GitHub advisories for this fork and
   `denoland/rusty_v8`, Chromium/V8 security releases, and material third-party
   component advisories. Affected unpublished candidates are discarded; affected

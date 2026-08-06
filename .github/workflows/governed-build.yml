@@ -3,14 +3,18 @@ name: governed-build-v150.2.0
 on:
   pull_request:
     branches:
-      - capsule/upstream-v150.2.0-d305e6a
-      - capsule/review-v150.2.0-r5
+      - capsule/review-v150.2.0-r*
+      - capsule/accepted-v150.2.0-r*
     types:
       - opened
       - synchronize
       - reopened
       - ready_for_review
       - converted_to_draft
+  push:
+    branches:
+      - capsule/review-v150.2.0-r*
+      - capsule/accepted-v150.2.0-r*
   workflow_dispatch:
     inputs:
       mode:
@@ -115,7 +119,8 @@ jobs:
   arm64-full-build:
     if: >-
       (github.event_name == 'workflow_dispatch' && inputs.mode == 'full-arm64') ||
-      (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
+      github.event_name == 'pull_request' ||
+      github.event_name == 'push'
     needs: contract
     runs-on: ubuntu-24.04
     timeout-minutes: 360
@@ -146,3 +151,22 @@ jobs:
           path: governed-out/v150.2.0/linux-arm64/
           if-no-files-found: error
           retention-days: 30
+
+  governed-admission:
+    name: Governed admission
+    if: >-
+      always() &&
+      (github.event_name == 'push' ||
+       github.event_name == 'pull_request')
+    needs:
+      - contract
+      - arm64-full-build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require governed contract and arm64 construction
+        env:
+          CONTRACT_RESULT: ${{ needs.contract.result }}
+          ARM64_RESULT: ${{ needs.arm64-full-build.result }}
+        run: |
+          test "$CONTRACT_RESULT" = success
+          test "$ARM64_RESULT" = success

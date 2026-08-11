@@ -13,11 +13,14 @@
 //! https://github.com/nodejs/node/tree/v13.7.0/src/inspector
 //! https://github.com/denoland/deno/blob/v0.38.0/cli/inspector.rs
 
+use crate::CallbackScope;
 use crate::Context;
 use crate::Isolate;
 use crate::Local;
+use crate::PinScope;
 use crate::StackTrace;
 use crate::Value;
+use crate::crdtp::CppVecU8;
 use crate::isolate::RealIsolate;
 use crate::support::CxxVTable;
 use crate::support::Opaque;
@@ -27,6 +30,7 @@ use crate::support::int;
 use std::cell::UnsafeCell;
 use std::ffi::c_void;
 use std::fmt::{self, Debug, Formatter};
+use std::pin::pin;
 
 unsafe extern "C" {
   fn v8_inspector__V8Inspector__Channel__BASE__CONSTRUCT(
@@ -84,6 +88,17 @@ unsafe extern "C" {
     session: *mut RawV8InspectorSession,
     object_group: StringView,
   );
+  fn v8_inspector__V8InspectorSession__wrapObject(
+    session: *mut RawV8InspectorSession,
+    context: *const Context,
+    value: *const Value,
+    object_group: StringView,
+    generate_preview: bool,
+  ) -> *mut RawRemoteObject;
+  fn v8_inspector__RemoteObject__DELETE(this: *mut RawRemoteObject);
+  fn v8_inspector__RemoteObject__toBytes(
+    this: *const RawRemoteObject,
+  ) -> *mut CppVecU8;
   fn v8_inspector__V8InspectorSession__schedulePauseOnNextStatement(
     session: *mut RawV8InspectorSession,
     break_reason: StringView,
@@ -95,6 +110,16 @@ unsafe extern "C" {
   fn v8_inspector__V8InspectorSession__canDispatchMethod(
     method: StringView,
   ) -> bool;
+  fn v8_inspector__V8InspectorSession__Inspectable__NEW(
+    rust_impl: *mut c_void,
+  ) -> *mut RawInspectable;
+  fn v8_inspector__V8InspectorSession__Inspectable__DELETE(
+    inspectable: *mut RawInspectable,
+  );
+  fn v8_inspector__V8InspectorSession__addInspectedObject(
+    session: *mut RawV8InspectorSession,
+    inspectable: *mut RawInspectable,
+  );
 
   fn v8_inspector__StringBuffer__DELETE(this: *mut StringBuffer);
   fn v8_inspector__StringBuffer__string(this: &StringBuffer) -> StringView<'_>;
@@ -269,6 +294,42 @@ unsafe extern "C" fn v8_inspector__V8InspectorClient__BASE__consoleAPIMessage(
         column_number,
         stack_trace,
       );
+  }
+}
+
+#[unsafe(no_mangle)]
+unsafe extern "C" fn v8_inspector__V8InspectorClient__BASE__valueSubtype(
+  this: *mut RawV8InspectorClient,
+  context: Local<Context>,
+  value: Local<Value>,
+) -> *mut StringBuffer {
+  let scope = pin!(unsafe { CallbackScope::new(context) });
+  let mut scope = scope.init();
+  unsafe {
+    V8InspectorClientHeap::from_raw(this)
+      .imp
+      .value_subtype(&mut scope, value)
+      .and_then(|mut v| v.take())
+      .map(|r| r.into_raw())
+      .unwrap_or(std::ptr::null_mut())
+  }
+}
+
+#[unsafe(no_mangle)]
+unsafe extern "C" fn v8_inspector__V8InspectorClient__BASE__descriptionForValueSubtype(
+  this: *mut RawV8InspectorClient,
+  context: Local<Context>,
+  value: Local<Value>,
+) -> *mut StringBuffer {
+  let scope = pin!(unsafe { CallbackScope::new(context) });
+  let mut scope = scope.init();
+  unsafe {
+    V8InspectorClientHeap::from_raw(this)
+      .imp
+      .description_for_value_subtype(&mut scope, value)
+      .and_then(|mut v| v.take())
+      .map(|r| r.into_raw())
+      .unwrap_or(std::ptr::null_mut())
   }
 }
 
@@ -533,6 +594,42 @@ pub trait V8InspectorClientImpl {
   ) {
   }
 
+  /// Returns a custom Chrome DevTools Protocol `Runtime.RemoteObject` subtype
+  /// for `value`. Use one of the protocol's defined subtype enum values.
+  /// Returning `Some` causes V8 to call
+  /// [`Self::description_for_value_subtype`].
+  ///
+  /// The callback scope uses the isolate's current context as a best-effort
+  /// context; it is not necessarily the context in which `value` originated.
+  /// If the isolate has no current context, V8 skips this callback entirely.
+  /// This callback runs while the inspector is constructing a value mirror.
+  /// Operations such as property access can execute JavaScript through getters
+  /// or proxies, so wrap them in a [`crate::TryCatch`] to avoid leaving a
+  /// pending exception in the inspector's mirror-building path.
+  fn value_subtype<'s>(
+    &self,
+    scope: &mut PinScope<'s, '_>,
+    value: Local<'s, Value>,
+  ) -> Option<UniquePtr<StringBuffer>> {
+    None
+  }
+
+  /// Returns the description for a value whose custom subtype was returned by
+  /// [`Self::value_subtype`]. Returning `None` makes V8 fall back to the default
+  /// object mirror, which also discards the custom subtype unless it is
+  /// `"error"` or `"array"`.
+  ///
+  /// Like [`Self::value_subtype`], this callback runs while the inspector is
+  /// constructing a value mirror. Wrap operations that can execute JavaScript
+  /// in a [`crate::TryCatch`] so an exception does not remain pending.
+  fn description_for_value_subtype<'s>(
+    &self,
+    scope: &mut PinScope<'s, '_>,
+    value: Local<'s, Value>,
+  ) -> Option<UniquePtr<StringBuffer>> {
+    None
+  }
+
   fn ensure_default_context_in_group(
     &self,
     context_group_id: i32,
@@ -601,6 +698,89 @@ impl Debug for V8InspectorClient {
 
 #[repr(C)]
 #[derive(Debug)]
+struct RawInspectable(Opaque);
+
+impl Drop for RawInspectable {
+  fn drop(&mut self) {
+    unsafe {
+      v8_inspector__V8InspectorSession__Inspectable__DELETE(self);
+    }
+  }
+}
+
+// A trait object is a fat pointer, so box it once more before passing it through
+// the FFI as a thin `*mut c_void`.
+struct InspectableData {
+  imp: Box<dyn InspectableImpl>,
+}
+
+/// Supplies the value of an object added to the inspector's `$0` through `$4`
+/// history.
+pub trait InspectableImpl {
+  /// Called by the inspector from within a V8 callback when the console
+  /// dereferences one of `$0` through `$4`.
+  ///
+  /// There is no way to return an empty handle; if no value is available,
+  /// return `undefined`.
+  fn get<'s>(
+    &self,
+    scope: &mut PinScope<'s, '_>,
+    context: Local<'s, Context>,
+  ) -> Local<'s, Value>;
+}
+
+/// An object that can be added to an inspector session's `$0` through `$4`
+/// history.
+pub struct Inspectable {
+  raw: UniqueRef<RawInspectable>,
+}
+
+impl Inspectable {
+  pub fn new(imp: Box<dyn InspectableImpl>) -> Self {
+    let data = Box::into_raw(Box::new(InspectableData { imp })).cast();
+    let raw = unsafe {
+      UniqueRef::from_raw(v8_inspector__V8InspectorSession__Inspectable__NEW(
+        data,
+      ))
+    };
+    Self { raw }
+  }
+}
+
+impl Debug for Inspectable {
+  fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    f.debug_struct("Inspectable").finish()
+  }
+}
+
+#[unsafe(no_mangle)]
+unsafe extern "C" fn v8_inspector__V8InspectorSession__Inspectable__BASE__get(
+  rust_impl: *mut c_void,
+  context: Local<Context>,
+) -> *const Value {
+  let data = unsafe { &*rust_impl.cast::<InspectableData>() };
+  // SAFETY: `CallbackScope::new(context)` must not open its own HandleScope.
+  // `NewCallbackScope for Local<Context>` has `NEEDS_SCOPE == false`, and
+  // `make_new_callback_scope` constructs it with `needs_scope == false`. The
+  // handle returned here is allocated in the EscapableHandleScope opened by
+  // the C++ shim and escaped there. If Rust opens its own HandleScope, that
+  // scope is destroyed before C++ escapes the handle, causing a use-after-free.
+  let scope = pin!(unsafe { CallbackScope::new(context) });
+  let mut scope = scope.init();
+  data.imp.get(&mut scope, context).as_non_null().as_ptr()
+}
+
+#[unsafe(no_mangle)]
+unsafe extern "C" fn v8_inspector__V8InspectorSession__Inspectable__BASE__DROP(
+  rust_impl: *mut c_void,
+) {
+  unsafe {
+    drop(Box::from_raw(rust_impl.cast::<InspectableData>()));
+  }
+}
+
+#[repr(C)]
+#[derive(Debug)]
 pub struct RawV8InspectorSession(Opaque);
 
 pub struct V8InspectorSession {
@@ -633,6 +813,41 @@ impl V8InspectorSession {
     }
   }
 
+  /// Wraps a V8 value in an Inspector `Runtime.RemoteObject`.
+  ///
+  /// With `generate_preview == false`, V8 uses `kIdOnly`: object results still
+  /// include metadata such as `className` and `description`, but no property
+  /// preview. With `true`, V8 uses `kPreview`, which additionally includes a
+  /// property preview.
+  ///
+  /// `context` is used only to obtain an execution-context ID and look up the
+  /// corresponding `InspectedContext` in this session's context group. The
+  /// selected `InjectedScript` wraps `value` in that inspected context's stored
+  /// V8 context. Returns `None` if no matching inspected context is registered,
+  /// for example before `V8Inspector::context_created`.
+  ///
+  /// `_scope` is intentionally unused by Rust; borrowing it keeps the caller's
+  /// V8 `HandleScope` alive while `ValueMirror::create` allocates local handles.
+  pub fn wrap_object<'s>(
+    &self,
+    _scope: &mut PinScope<'s, '_>,
+    context: Local<'s, Context>,
+    value: Local<'s, Value>,
+    object_group: StringView,
+    generate_preview: bool,
+  ) -> Option<RemoteObject> {
+    unsafe {
+      UniqueRef::try_from_raw(v8_inspector__V8InspectorSession__wrapObject(
+        self.raw.as_ptr(),
+        &*context,
+        &*value,
+        object_group,
+        generate_preview,
+      ))
+      .map(|raw| RemoteObject { raw })
+    }
+  }
+
   pub fn schedule_pause_on_next_statement(
     &self,
     reason: StringView,
@@ -656,11 +871,52 @@ impl V8InspectorSession {
       );
     }
   }
+
+  pub fn add_inspected_object(&self, inspectable: Inspectable) {
+    unsafe {
+      v8_inspector__V8InspectorSession__addInspectedObject(
+        self.raw.as_ptr(),
+        inspectable.raw.into_raw(),
+      );
+    }
+  }
 }
 
 impl Drop for V8InspectorSession {
   fn drop(&mut self) {
     unsafe { v8_inspector__V8InspectorSession__DELETE(self.raw.as_ptr()) };
+  }
+}
+
+/// An opaque, owned Inspector `Runtime.RemoteObject`.
+pub struct RemoteObject {
+  raw: UniqueRef<RawRemoteObject>,
+}
+
+#[repr(C)]
+#[derive(Debug)]
+struct RawRemoteObject(Opaque);
+
+impl RemoteObject {
+  /// Serializes this remote object to its CRDTP/CBOR representation.
+  pub fn to_bytes(&self) -> Vec<u8> {
+    unsafe {
+      CppVecU8::take_from_raw(v8_inspector__RemoteObject__toBytes(
+        self.raw.as_ptr(),
+      ))
+    }
+  }
+}
+
+impl Debug for RemoteObject {
+  fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    f.debug_struct("RemoteObject").finish()
+  }
+}
+
+impl Drop for RawRemoteObject {
+  fn drop(&mut self) {
+    unsafe { v8_inspector__RemoteObject__DELETE(self) }
   }
 }
 

@@ -50,6 +50,7 @@ mod handle;
 pub mod icu;
 mod isolate;
 mod isolate_create_params;
+mod locker;
 mod microtask;
 mod module;
 mod name;
@@ -87,7 +88,6 @@ pub mod crdtp;
 pub mod inspector;
 pub mod json;
 pub mod script_compiler;
-#[cfg(feature = "simdutf")]
 pub mod simdutf;
 // This module is intentionally named "V8" rather than "v8" to match the
 // C++ namespace "v8::V8".
@@ -116,6 +116,8 @@ pub use isolate::HostCreateShadowRealmContextCallback;
 pub use isolate::HostImportModuleDynamicallyCallback;
 pub use isolate::HostImportModuleWithPhaseDynamicallyCallback;
 pub use isolate::HostInitializeImportMetaObjectCallback;
+pub use isolate::IntoSharedError;
+pub use isolate::IntoSharedErrorKind;
 pub use isolate::Isolate;
 pub use isolate::IsolateHandle;
 pub use isolate::MemoryPressureLevel;
@@ -136,6 +138,8 @@ pub use isolate::UseCounterCallback;
 pub use isolate::UseCounterFeature;
 pub use isolate::WasmAsyncSuccess;
 pub use isolate_create_params::CreateParams;
+pub use locker::Locker;
+pub use locker::SharedIsolate;
 pub use microtask::MicrotaskQueue;
 pub use microtask::MicrotaskQueueHandle;
 pub use module::*;
